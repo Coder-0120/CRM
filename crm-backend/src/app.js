@@ -10,6 +10,11 @@ const app = express();
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
 app.use(express.json());
+// Increase timeout for AI agent calls
+app.use((req, res, next) => {
+  res.setTimeout(120000); // 2 minutes
+  next();
+});
 app.use(morgan('dev'));
 
 mongoose.connect(process.env.MONGODB_URI)

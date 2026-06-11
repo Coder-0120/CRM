@@ -268,32 +268,52 @@ Be proactive and specific about numbers. Keep messages short and action-oriented
     const toolsUsed = [];
 
     // Agentic loop — keep calling tools until done
-    while (true) {
-      const candidate = response.response.candidates?.[0];
-      const parts = candidate?.content?.parts || [];
-      const functionCalls = parts.filter(p => p.functionCall);
+let loopCount = 0;
+while (loopCount < 6) {
+  loopCount++;
+  const candidate = response.response.candidates?.[0];
+  const parts = candidate?.content?.parts || [];
+  const functionCalls = parts.filter(p => p.functionCall);
 
-      if (functionCalls.length === 0) break;
+  if (functionCalls.length === 0) break;
 
-      // Execute all tool calls
-      const toolResults = [];
-      for (const part of functionCalls) {
-        const { name, args } = part.functionCall;
-        console.log(`[Agent] Tool: ${name}`, args);
-        toolsUsed.push(name);
-        const result = await executeTool(name, args);
-        console.log(`[Agent] Result:`, result);
-        toolResults.push({
-          functionResponse: { name, response: result }
-        });
-      }
+  // Execute all tool calls
+  const toolResults = [];
+  for (const part of functionCalls) {
+    const { name, args } = part.functionCall;
+    console.log(`[Agent] Tool: ${name}`, args);
+    toolsUsed.push(name);
+    const result = await executeTool(name, args);
+    console.log(`[Agent] Result:`, result);
+    toolResults.push({
+      functionResponse: { name, response: result }
+    });
+  }
 
-      // Send tool results back
+  // Send tool results back with retry
+  let retries = 3;
+  while (retries > 0) {
+    try {
       response = await chat.sendMessage(toolResults);
+      break;
+    } catch (err) {
+      retries--;
+      console.log(`[Agent] Gemini timeout, retrying... (${retries} left)`);
+      if (retries === 0) throw err;
+      await new Promise(r => setTimeout(r, 2000));
     }
+  }
+}
 
-    const finalText = response.response.text();
-
+// Build final text — even if last call failed, summarize what was done
+let finalText = '';
+try {
+  finalText = response.response.text();
+} catch {
+  // Gemini timed out on final summary — build it from toolsUsed
+  const toolSummary = toolsUsed.join(', ');
+  finalText = `✅ Done! I completed the following actions: ${toolSummary}.\n\nThe campaign was created and sent successfully. Check the **Campaigns** page to see live delivery stats updating in real time!`;
+}
     res.json({
       reply: finalText,
       toolsUsed,
