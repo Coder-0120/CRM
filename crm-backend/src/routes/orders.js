@@ -50,4 +50,19 @@ router.post('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+router.post('/bulk', async (req, res) => {
+  try {
+    const { orders } = req.body;
+    const results = [];
+    for (const o of orders) {
+      const customer = await Customer.findOne({ email: o.customerEmail });
+      if (!customer) { results.push({ skipped: o.customerEmail, reason: 'customer not found' }); continue; }
+      await Order.create({ customerId: customer._id, customerEmail: customer.email, amount: o.amount, status: o.status || 'completed' });
+      await Customer.findByIdAndUpdate(customer._id, { $inc: { totalSpend: o.amount, visitCount: 1 }, lastActiveDate: new Date() });
+      results.push({ created: o.customerEmail });
+    }
+    res.json({ success: true, results });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;

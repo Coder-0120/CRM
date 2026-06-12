@@ -23,4 +23,21 @@ router.get('/stats', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+router.post('/bulk', async (req, res) => {
+  try {
+    const { customers } = req.body;
+    const results = [];
+    for (const c of customers) {
+      const existing = await Customer.findOne({ email: c.email });
+      if (existing) {
+        results.push({ skipped: c.email });
+      } else {
+        const created = await Customer.create(c);
+        results.push({ created: created.email });
+      }
+    }
+    res.json({ success: true, results, total: results.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;
