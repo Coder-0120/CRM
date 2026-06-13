@@ -1454,7 +1454,7 @@ tr:hover td{background:rgba(108,99,255,.03)}
 }
 
 /* light mode step defaults */
-[data-theme!=dark] .mini-step {
+[data-theme=light] .mini-step {
   border-color: var(--bd);
   background: var(--card2);
 }
@@ -1511,7 +1511,7 @@ tr:hover td{background:rgba(108,99,255,.03)}
     transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-[data-theme!=dark] .ms-num {
+[data-theme=light] .ms-num {
   color: var(--t3);
   background: var(--bg3);
 }
@@ -1558,7 +1558,7 @@ tr:hover td{background:rgba(108,99,255,.03)}
   transition: color 0.35s ease;
 }
 
-[data-theme!=dark] .ms-lbl {
+[data-theme=light] .ms-lbl {
   color: var(--t3);
 }
 
@@ -1570,11 +1570,11 @@ tr:hover td{background:rgba(108,99,255,.03)}
   color: rgba(110, 231, 183, 0.9);
 }
 
-[data-theme!=dark] .mini-step.ms-active .ms-lbl {
+[data-theme=light] .mini-step.ms-active .ms-lbl {
   color: var(--p);
 }
 
-[data-theme!=dark] .mini-step.ms-done .ms-lbl {
+[data-theme=light] .mini-step.ms-done .ms-lbl {
   color: #059669;
 }
 
@@ -1587,7 +1587,7 @@ tr:hover td{background:rgba(108,99,255,.03)}
   overflow: hidden;
 }
 
-[data-theme!=dark] .mp-track {
+[data-theme=light] .mp-track {
   background: var(--bg3);
 }
 
@@ -1614,7 +1614,7 @@ tr:hover td{background:rgba(108,99,255,.03)}
   text-overflow: ellipsis;
 }
 
-[data-theme!=dark] .mp-status {
+[data-theme=light] .mp-status {
   color: var(--t3);
 }
 
