@@ -1372,3 +1372,288 @@ tr:hover td{background:rgba(108,99,255,.03)}
     font-size:11px;
   }
 }
+/* ============================================================
+   PASTE THIS ENTIRE BLOCK AT THE BOTTOM OF YOUR EXISTING CSS
+   ============================================================ */
+
+/* ── hero: aurora canvas sits below all hero content ── */
+.hero {
+  position: relative; /* already set, just confirming */
+}
+
+/* ── connector rail above step cards ── */
+.mc-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 22px 8px;
+  align-items: center;
+}
+
+.mc-seg {
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme=dark] .mc-seg {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mc-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--p), var(--p2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.55s ease;
+}
+
+.mc-seg.mc-run .mc-fill {
+  transform: scaleX(1);
+}
+
+.mc-seg.mc-done .mc-fill {
+  transform: scaleX(1);
+  background: linear-gradient(90deg, #059669, #10b981);
+}
+
+/* ── step cards (replaces old .mini-step) ── */
+.mini-flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 22px 14px;
+}
+
+.mini-step {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 16px 14px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: default;
+  transition:
+    border-color 0.4s ease,
+    background 0.4s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s ease;
+}
+
+[data-theme=dark] .mini-step {
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+/* light mode step defaults */
+[data-theme!=dark] .mini-step {
+  border-color: var(--bd);
+  background: var(--card2);
+}
+
+.mini-step.ms-active {
+  border-color: rgba(37, 99, 235, 0.6);
+  background: rgba(37, 99, 235, 0.08);
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 14px 40px rgba(37, 99, 235, 0.22), 0 0 0 1px rgba(96, 165, 250, 0.25);
+}
+
+.mini-step.ms-done {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.06);
+  transform: translateY(0) scale(1);
+}
+
+/* radial glow overlay */
+.ms-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.38), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.mini-step.ms-active .ms-glow {
+  opacity: 1;
+}
+
+.mini-step.ms-done .ms-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.22), transparent 65%);
+  opacity: 1;
+}
+
+/* numbered badge */
+.ms-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  transition:
+    background 0.4s ease,
+    color 0.4s ease,
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme!=dark] .ms-num {
+  color: var(--t3);
+  background: var(--bg3);
+}
+
+.mini-step.ms-active .ms-num {
+  background: linear-gradient(135deg, var(--p), var(--p2));
+  color: #fff;
+  transform: scale(1.3) rotate(-8deg);
+}
+
+.mini-step.ms-done .ms-num {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
+  transform: scale(1);
+}
+
+/* emoji icon */
+.ms-icon {
+  font-size: 26px;
+  display: block;
+  margin-bottom: 10px;
+  filter: grayscale(1) opacity(0.35);
+  transition:
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.4s ease;
+}
+
+.mini-step.ms-active .ms-icon {
+  transform: scale(1.22);
+  filter: none;
+}
+
+.mini-step.ms-done .ms-icon {
+  filter: none;
+  transform: scale(1);
+}
+
+/* label */
+.ms-lbl {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.38);
+  line-height: 1.35;
+  transition: color 0.35s ease;
+}
+
+[data-theme!=dark] .ms-lbl {
+  color: var(--t3);
+}
+
+.mini-step.ms-active .ms-lbl {
+  color: rgba(147, 197, 253, 1);
+}
+
+.mini-step.ms-done .ms-lbl {
+  color: rgba(110, 231, 183, 0.9);
+}
+
+[data-theme!=dark] .mini-step.ms-active .ms-lbl {
+  color: var(--p);
+}
+
+[data-theme!=dark] .mini-step.ms-done .ms-lbl {
+  color: #059669;
+}
+
+/* ── progress bar ── */
+.mp-track {
+  margin: 2px 22px 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+[data-theme!=dark] .mp-track {
+  background: var(--bg3);
+}
+
+.mp-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--p), var(--p2), #10b981);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.6);
+  transition: width 0.55s ease;
+}
+
+/* ── status row ── */
+.mp-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.32);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-theme!=dark] .mp-status {
+  color: var(--t3);
+}
+
+.mp-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  flex-shrink: 0;
+  animation: mpdot 1.8s ease-in-out infinite;
+}
+
+@keyframes mpdot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #10b981; }
+  50%       { opacity: 0.3; box-shadow: none; }
+}
+
+/* ── responsive: 2-col on small screens ── */
+@media (max-width: 600px) {
+  .mini-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mc-rail {
+    display: none;
+  }
+}
+
+/* ── headline accent line ── */
+.htitle-accent {
+  background: linear-gradient(135deg, var(--p) 0%, var(--p2) 55%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline;
+}
+
+/* ── hproof: ensure it's below the fold so scroll trigger actually fires ── */
+.hproof {
+  /* push it below viewport so IntersectionObserver triggers on scroll */
+  position: relative;
+  z-index: 1;
+}
