@@ -29,22 +29,21 @@ export default function Sidebar({ open, onClose, onOpen }) {
 
   const quit = () => { logout(); nav('/'); };
 
+  // Avatar letter — works with both old mock user (has .av) and real backend user (has .name)
+  const avatarLetter = user?.av || user?.name?.[0]?.toUpperCase() || 'U';
+  const displayName  = user?.name || 'User';
+  const displayRole  = user?.role || 'Marketer';
+
   return (
     <>
-      {/* ── Hamburger button (visible only on mobile) ── */}
+      {/* Hamburger (mobile only) */}
       {!open && (
-
-      <button
-        className="ham"
-        onClick={onOpen}
-        aria-label="Open menu"
-        aria-expanded={open}
-      >
-        <Menu size={20} />
-      </button>
+        <button className="ham" onClick={onOpen} aria-label="Open menu" aria-expanded={open}>
+          <Menu size={20} />
+        </button>
       )}
 
-      {/* ── Mobile backdrop ── */}
+      {/* Mobile backdrop */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -59,11 +58,9 @@ export default function Sidebar({ open, onClose, onOpen }) {
         )}
       </AnimatePresence>
 
-      {/* ── Sidebar ── */}
-    <motion.aside
-  className={`sb ${open ? "open" : ""}`}
-  initial={false}
->
+      {/* Sidebar */}
+      <motion.aside className={`sb ${open ? 'open' : ''}`} initial={false}>
+
         {/* Logo row */}
         <div className="sb-logo">
           <div className="sb-logo-ic">✦</div>
@@ -71,7 +68,6 @@ export default function Sidebar({ open, onClose, onOpen }) {
             <h1>Xeno<em>CRM</em></h1>
             <p>AI Campaign Platform</p>
           </div>
-          {/* Close button — mobile only */}
           <button className="sb-close" onClick={onClose} aria-label="Close menu">
             <X size={18} />
           </button>
@@ -102,10 +98,10 @@ export default function Sidebar({ open, onClose, onOpen }) {
         {/* Footer */}
         <div className="sb-foot">
           <div className="sb-user">
-            <div className="sb-ava" aria-hidden="true">{user?.av || user?.name?.[0] || 'U'}</div>
+            <div className="sb-ava" aria-hidden="true">{avatarLetter}</div>
             <div className="sb-uinfo">
-              <p>{user?.name || 'User'}</p>
-              <span>{user?.role || 'Marketer'}</span>
+              <p>{displayName}</p>
+              <span>{displayRole}</span>
             </div>
             <button className="sb-logout" onClick={quit} title="Sign out" aria-label="Sign out">
               <LogOut size={16} />

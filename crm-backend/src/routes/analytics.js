@@ -1,14 +1,19 @@
-const router = require('express').Router();
-const Campaign = require('../models/Campaign');
-const Customer = require('../models/Customer');
+const router           = require('express').Router();
+const Campaign         = require('../models/Campaign');
+const Customer         = require('../models/Customer');
 const CommunicationLog = require('../models/CommunicationLog');
+const auth             = require('../middleware/auth');
+
+router.use(auth);
 
 router.get('/overview', async (req, res) => {
   try {
+    const uid = req.userId;
     const [totalCustomers, totalCampaigns, logs] = await Promise.all([
-      Customer.countDocuments(),
-      Campaign.countDocuments(),
+      Customer.countDocuments({ userId: uid }),
+      Campaign.countDocuments({ userId: uid }),
       CommunicationLog.aggregate([
+        { $match: { userId: uid } },
         { $group: { _id: '$status', count: { $sum: 1 } } }
       ])
     ]);
@@ -20,7 +25,7 @@ router.get('/overview', async (req, res) => {
 
 router.get('/campaigns', async (req, res) => {
   try {
-    const campaigns = await Campaign.find({ status: 'completed' })
+    const campaigns = await Campaign.find({ userId: req.userId, status: 'completed' })
       .select('name stats createdAt').sort({ createdAt: -1 }).limit(10);
     res.json(campaigns);
   } catch (e) { res.status(500).json({ error: e.message }); }

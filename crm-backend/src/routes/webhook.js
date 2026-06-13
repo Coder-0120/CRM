@@ -1,6 +1,7 @@
 const CommunicationLog = require('../models/CommunicationLog');
-const Campaign = require('../models/Campaign');
+const Campaign         = require('../models/Campaign');
 
+// No auth middleware — this is called by the internal channel service
 module.exports = async (req, res) => {
   try {
     const { logId, status } = req.body;
@@ -11,11 +12,9 @@ module.exports = async (req, res) => {
     log.statusHistory.push({ status, timestamp: new Date() });
     await log.save();
 
-    // Update campaign stats atomically
     const statField = `stats.${status}`;
     await Campaign.findByIdAndUpdate(log.campaignId, { $inc: { [statField]: 1 } });
 
-    // Mark completed if all delivered/failed
     const campaign = await Campaign.findById(log.campaignId);
     if (campaign && (campaign.stats.delivered + campaign.stats.failed) >= campaign.stats.total) {
       await Campaign.findByIdAndUpdate(log.campaignId, { status: 'completed' });

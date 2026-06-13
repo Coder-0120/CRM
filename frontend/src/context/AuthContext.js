@@ -1,36 +1,66 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Ctx = createContext();
 
-const DB = [
-  { id:1, email:'admin@trendvault.com', password:'admin123', name:'Anshul Kumar',  role:'Admin',    av:'A' },
-  { id:2, email:'demo@xeno.com',        password:'demo123',  name:'Demo Marketer', role:'Marketer', av:'D' },
-  { id:3, email:'judge@xeno.com',       password:'judge123', name:'Xeno Judge',    role:'Viewer',   av:'J' },
-];
+const BASE = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace('/api', '')
+  : 'http://localhost:5000';
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('xcrm-user')); } catch { return null; }
-  });
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true); // true while verifying stored token
 
-  const save = (u) => { setUser(u); localStorage.setItem('xcrm-user', JSON.stringify(u)); };
+  // On mount: restore session from stored token
+  useEffect(() => {
+    const token = localStorage.getItem('xeno_token');
+    if (!token) { setLoading(false); return; }
 
-  const login = (email, password) => {
-    const f = DB.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-    if (f) { const { password:_, ...safe } = f; save(safe); return { ok: true }; }
-    return { ok: false, err: 'Invalid email or password' };
+    axios.get(`${BASE}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => setUser(r.data))
+      .catch(() => localStorage.removeItem('xeno_token'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const _persist = (token, userData) => {
+    localStorage.setItem('xeno_token', token);
+    setUser(userData);
   };
 
-  const signup = (name, email, password) => {
-    if (DB.find(u => u.email.toLowerCase() === email.toLowerCase()))
-      return { ok: false, err: 'Email already registered. Please sign in.' };
-    save({ id: Date.now(), name, email, role: 'Marketer', av: name[0].toUpperCase() });
-    return { ok: true };
+  // login(email, password) → { ok, err? }
+  const login = async (email, password) => {
+    try {
+      const { data } = await axios.post(`${BASE}/api/auth/login`, { email, password });
+      _persist(data.token, data.user);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, err: e.response?.data?.error || 'Login failed. Check your credentials.' };
+    }
   };
 
-  const logout = () => { setUser(null); localStorage.removeItem('xcrm-user'); };
+  // signup(name, email, password) → { ok, err? }
+  const signup = async (name, email, password) => {
+    try {
+      const { data } = await axios.post(`${BASE}/api/auth/signup`, { name, email, password });
+      _persist(data.token, data.user);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, err: e.response?.data?.error || 'Signup failed. Please try again.' };
+    }
+  };
 
-  return <Ctx.Provider value={{ user, login, signup, logout }}>{children}</Ctx.Provider>;
+  const logout = () => {
+    localStorage.removeItem('xeno_token');
+    setUser(null);
+  };
+
+  return (
+    <Ctx.Provider value={{ user, loading, login, signup, logout }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export const useAuth = () => useContext(Ctx);

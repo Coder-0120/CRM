@@ -70,7 +70,8 @@ export default function Dashboard() {
       sub: `${custStats?.newThisMonth ?? 0} new this month`,
       color: '#1e40af',
       icon: Users,
-      bgGradient: 'linear-gradient(135deg, rgba(30,64,175,.08), rgba(59,130,246,.04))'
+      bgGradient: 'linear-gradient(135deg, rgba(30,64,175,.08), rgba(59,130,246,.04))',
+      darkBgGradient: 'linear-gradient(135deg, rgba(59,130,246,.22), rgba(34,211,238,.06))'
     },
     { 
       label: 'High-Value Customers', 
@@ -78,7 +79,8 @@ export default function Dashboard() {
       sub: 'Spent over ₹10,000',
       color: '#059669',
       icon: Target,
-      bgGradient: 'linear-gradient(135deg, rgba(5,150,105,.08), rgba(52,211,153,.04))'
+      bgGradient: 'linear-gradient(135deg, rgba(5,150,105,.08), rgba(52,211,153,.04))',
+      darkBgGradient: 'linear-gradient(135deg, rgba(16,185,129,.22), rgba(52,211,153,.06))'
     },
     { 
       label: 'At-Risk Customers', 
@@ -86,7 +88,8 @@ export default function Dashboard() {
       sub: 'Inactive 90+ days',
       color: '#d97706',
       icon: TrendingUp,
-      bgGradient: 'linear-gradient(135deg, rgba(217,119,6,.08), rgba(251,146,60,.04))'
+      bgGradient: 'linear-gradient(135deg, rgba(217,119,6,.08), rgba(251,146,60,.04))',
+      darkBgGradient: 'linear-gradient(135deg, rgba(245,158,11,.20), rgba(251,146,60,.06))'
     },
     { 
       label: 'Messages Delivered', 
@@ -94,7 +97,8 @@ export default function Dashboard() {
       sub: `${overview?.opened ?? 0} opened · ${overview?.clicked ?? 0} clicked`,
       color: '#0891b2',
       icon: Mail,
-      bgGradient: 'linear-gradient(135deg, rgba(8,145,178,.08), rgba(34,211,238,.04))'
+      bgGradient: 'linear-gradient(135deg, rgba(8,145,178,.08), rgba(34,211,238,.04))',
+      darkBgGradient: 'linear-gradient(135deg, rgba(34,211,238,.20), rgba(8,145,178,.06))'
     },
   ];
 
@@ -118,15 +122,15 @@ export default function Dashboard() {
     },
   };
 
-  const StatCard = ({ label, value, sub, color, icon: Icon, bgGradient, index }) => (
+  const StatCard = ({ label, value, sub, color, icon: Icon, bgGradient, darkBgGradient, index }) => (
     <motion.div
       variants={itemVariants}
       initial="hidden"
       animate="visible"
       transition={{ delay: index * 0.1 }}
       className="stat-card"
-      style={{ background: bgGradient, borderColor: `${color}30` }}
-      whileHover={{ y: -8, boxShadow: `0 12px 32px ${color}25` }}
+      style={{ background: theme === 'dark' ? darkBgGradient : bgGradient, borderColor: `${color}30` }}
+      whileHover={{ y: -8, boxShadow: `0 12px 32px ${color}${theme === 'dark' ? '45' : '25'}` }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>

@@ -108,7 +108,7 @@ export default function Agent() {
         content: m.content
       }));
 
-      const res = await api.post('/agent/chat', { messages: history });
+      const res = await api.post('/api/agent/chat', { messages: history });
       setMessages(prev => [...prev, {
         role: 'ai',
         content: res.data.reply,

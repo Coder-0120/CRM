@@ -23,7 +23,7 @@ const cardVariants = {
 export default function Segments() {
   const { data: segments, isLoading } = useQuery({
     queryKey: ['segments'],
-    queryFn: () => api.get('/segments').then(r => r.data),
+    queryFn: () => api.get('/api/segments').then(r => r.data),
     refetchInterval: 5000
   });
 

@@ -25,15 +25,18 @@ function buildMongoQuery(rules, logicOperator) {
   return { $and: conditions };
 }
 
-async function getAudienceForSegment(segment) {
-  const query = buildMongoQuery(segment.rules, segment.logicOperator);
-  return Customer.find(query);
+// userId is required so segments only match the owner's customers
+async function getAudienceForSegment(segment, userId) {
+  const ruleQuery = buildMongoQuery(segment.rules, segment.logicOperator);
+  return Customer.find({ userId, ...ruleQuery });
 }
 
-async function previewSegment(rules, logicOperator) {
-  const query = buildMongoQuery(rules, logicOperator);
-  const count = await Customer.countDocuments(query);
-  const sample = await Customer.find(query).limit(5).select('name email city totalSpend lastActiveDate');
+async function previewSegment(rules, logicOperator, userId) {
+  const ruleQuery = buildMongoQuery(rules, logicOperator);
+  const query = userId ? { userId, ...ruleQuery } : ruleQuery;
+  const count  = await Customer.countDocuments(query);
+  const sample = await Customer.find(query).limit(5)
+    .select('name email city totalSpend lastActiveDate');
   return { count, sample };
 }
 

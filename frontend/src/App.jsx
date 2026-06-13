@@ -17,31 +17,46 @@ import './App.css';
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
+// Full-page loading spinner while session is being restored
+function SessionLoader() {
+  return (
+    <div style={{
+      height: '100vh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: 16,
+      background: 'var(--bg)', color: 'var(--t2)', fontSize: 14
+    }}>
+      <div style={{
+        width: 36, height: 36, border: '3px solid var(--bd)',
+        borderTopColor: '#1e40af', borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite'
+      }} />
+      Restoring session…
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
 function Shell({ children }) {
-  const { user }  = useAuth();
+  const { user, loading } = useAuth();
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (loading) return <SessionLoader />;
+  if (!user)   return <Navigate to="/login" replace />;
 
   return (
     <div className="shell" data-theme={theme}>
-      {/* Sidebar handles its own .ham button + overlay internally */}
-      <Sidebar
-        open={open}
-        onOpen={() => setOpen(true)}
-        onClose={() => setOpen(false)}
-      />
+      <Sidebar open={open} onOpen={() => setOpen(true)} onClose={() => setOpen(false)} />
       <main className="page">{children}</main>
     </div>
   );
 }
 
-function Routes_() {
+function AppRoutes() {
   return (
     <Routes>
       <Route path="/"          element={<Landing />} />
-      <Route path="/login"     element={<Login />} />
+      <Route path="/login"     element={<LoginGuard />} />
       <Route path="/dashboard" element={<Shell><Dashboard /></Shell>} />
       <Route path="/agent"     element={<Shell><Agent /></Shell>} />
       <Route path="/ingest"    element={<Shell><Ingest /></Shell>} />
@@ -53,13 +68,21 @@ function Routes_() {
   );
 }
 
+// Redirect already-logged-in users away from /login
+function LoginGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return <SessionLoader />;
+  if (user)    return <Navigate to="/dashboard" replace />;
+  return <Login />;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={qc}>
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
-            <Routes_ />
+            <AppRoutes />
             <Toaster
               position="top-right"
               toastOptions={{ style: { fontSize: 13, borderRadius: 10 }, duration: 3000 }}
