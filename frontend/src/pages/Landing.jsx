@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import {
   ArrowRight,
   BarChart3,
@@ -18,6 +19,8 @@ import {
   Target,
   UploadCloud,
   X,
+  LogOut,
+  User,
   Zap
 } from 'lucide-react';
 
@@ -79,6 +82,7 @@ const rise = (delay = 0) => ({
 });
 
 export default function Landing() {
+  const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -129,14 +133,46 @@ export default function Landing() {
             <a href="#how" onClick={closeNav}>How it works</a>
             <a href="#feedback" onClick={closeNav}>Feedback</a>
           </div>
-          <div className="lnav-actions">
-            <button className="lnav-theme" onClick={toggle} aria-label="Toggle theme">
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              {theme === 'dark' ? 'Light' : 'Dark'}
-            </button>
-            <Link to="/login" className="lmini" onClick={closeNav}>Sign in</Link>
-            <Link to="/login" className="lmini primary" onClick={closeNav}>Get started</Link>
-          </div>
+         <div className="lnav-actions">
+  <button
+    className="lnav-theme"
+    onClick={toggle}
+    aria-label="Toggle theme"
+  >
+    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+    {theme === 'dark' ? 'Light' : 'Dark'}
+  </button>
+
+  {!user ? (
+    <>
+      <Link to="/login" className="lmini" onClick={closeNav}>
+        Sign in
+      </Link>
+
+      <Link to="/login" className="lmini primary" onClick={closeNav}>
+        Get started
+      </Link>
+    </>
+  ) : (
+    <>
+      <div className="landing-user">
+        <User size={16} />
+        <span>{user.name}</span>
+      </div>
+
+      <button
+        className="landing-logout"
+        onClick={() => {
+          logout();
+          closeNav();
+        }}
+      >
+        <LogOut size={16} />
+        Logout
+      </button>
+    </>
+  )}
+</div>
         </div>
       </nav>
 

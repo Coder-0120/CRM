@@ -1201,6 +1201,37 @@ tr:hover td{background:rgba(108,99,255,.03)}
   /* Landing nav links hidden on mobile until toggled */
   .lnav-links a:not(:last-child):not(:nth-last-child(2)){display:none}
 }
+.landing-user{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border:1px solid var(--bd);
+  border-radius:12px;
+  background:var(--card);
+  color:var(--t1);
+  font-weight:600;
+  font-size:14px;
+}
+
+.landing-logout{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:none;
+  cursor:pointer;
+  padding:10px 14px;
+  border-radius:12px;
+  background:#ef4444;
+  color:white;
+  font-weight:600;
+  transition:.25s;
+}
+
+.landing-logout:hover{
+  transform:translateY(-2px);
+  opacity:.9;
+}
 
 /* ── 520px ── */
 @media(max-width:520px){
