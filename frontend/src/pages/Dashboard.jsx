@@ -34,25 +34,25 @@ export default function Dashboard() {
 
   const { data: custStats } = useQuery({
     queryKey: ['custStats'],
-    queryFn: () => api.get('/customers/stats').then(r => r.data),
+    queryFn: () => api.get('/api/customers/stats').then(r => r.data),
     refetchInterval: 10000
   });
 
   const { data: orderStats } = useQuery({
     queryKey: ['orderStats'],
-    queryFn: () => api.get('/orders/stats').then(r => r.data),
+    queryFn: () => api.get('/api/orders/stats').then(r => r.data),
     refetchInterval: 10000
   });
 
   const { data: overview } = useQuery({
     queryKey: ['overview'],
-    queryFn: () => api.get('/analytics/overview').then(r => r.data),
+    queryFn: () => api.get('/api/analytics/overview').then(r => r.data),
     refetchInterval: 5000
   });
 
   const { data: campaignData } = useQuery({
     queryKey: ['campaignAnalytics'],
-    queryFn: () => api.get('/analytics/campaigns').then(r => r.data),
+    queryFn: () => api.get('/api/analytics/campaigns').then(r => r.data),
     refetchInterval: 5000
   });
 
