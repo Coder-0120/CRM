@@ -17,6 +17,7 @@ router.get('/overview', async (req, res) => {
         { $group: { _id: '$status', count: { $sum: 1 } } }
       ])
     ]);
+
     const statusMap = {};
     logs.forEach(l => statusMap[l._id] = l.count);
     res.json({ totalCustomers, totalCampaigns, ...statusMap });

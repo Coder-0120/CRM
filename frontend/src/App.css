@@ -103,11 +103,12 @@
 /* Replace the flat white "shine" overlay with a soft colored sheen */
 [data-theme=dark] .page::before{
   background:linear-gradient(135deg, rgba(96,165,250,.07), transparent 45%);
+  background:linear-gradient(140deg, rgba(188, 243, 249, 0.442), transparent 45%);
 }
 
 /* Replace the dull white glow circle on stat cards with a colored glow */
 [data-theme=dark] .stat-card::after{
-  background:radial-gradient(circle, rgba(96,165,250,.45), transparent 70%);
+  background:radial-gradient(circle, rgba(96,165,250,.45), transparent 40%);
   opacity:.4;
 }
 
@@ -146,6 +147,7 @@ body::before{
   background-image:
     linear-gradient(rgba(37,99,235,.045) 1px,transparent 1px),
     linear-gradient(90deg,rgba(37,99,235,.045) 1px,transparent 1px);
+    
   background-size:48px 48px;
   mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 75%);
 }

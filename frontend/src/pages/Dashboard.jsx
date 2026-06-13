@@ -62,7 +62,20 @@ export default function Dashboard() {
     Opened: c.stats?.opened || 0,
     Clicked: c.stats?.clicked || 0,
   })).reverse();
+const totalDelivered = (campaignData || []).reduce(
+  (sum, c) => sum + (c.stats?.delivered || 0),
+  0
+);
 
+const totalOpened = (campaignData || []).reduce(
+  (sum, c) => sum + (c.stats?.opened || 0),
+  0
+);
+
+const totalClicked = (campaignData || []).reduce(
+  (sum, c) => sum + (c.stats?.clicked || 0),
+  0
+);
   const statCards = [
     { 
       label: 'Total Customers', 
@@ -91,15 +104,15 @@ export default function Dashboard() {
       bgGradient: 'linear-gradient(135deg, rgba(217,119,6,.08), rgba(251,146,60,.04))',
       darkBgGradient: 'linear-gradient(135deg, rgba(245,158,11,.20), rgba(251,146,60,.06))'
     },
-    { 
-      label: 'Messages Delivered', 
-      value: overview?.delivered ?? '—',
-      sub: `${overview?.opened ?? 0} opened · ${overview?.clicked ?? 0} clicked`,
-      color: '#0891b2',
-      icon: Mail,
-      bgGradient: 'linear-gradient(135deg, rgba(8,145,178,.08), rgba(34,211,238,.04))',
-      darkBgGradient: 'linear-gradient(135deg, rgba(34,211,238,.20), rgba(8,145,178,.06))'
-    },
+   {
+  label: 'Messages Delivered',
+  value: totalDelivered,
+  sub: `${totalOpened} opened · ${totalClicked} clicked`,
+  color: '#0891b2',
+  icon: Mail,
+  bgGradient: 'linear-gradient(135deg, rgba(8,145,178,.08), rgba(34,211,238,.04))',
+  darkBgGradient: 'linear-gradient(135deg, rgba(34,211,238,.20), rgba(8,145,178,.06))'
+}
   ];
 
   const containerVariants = {
