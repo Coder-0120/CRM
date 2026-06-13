@@ -102,10 +102,24 @@ export default function Landing() {
       <div className="scroll-progress" style={{ width: `${progress}%` }} />
 
       <nav className={`lnav ${scrolled ? 'scrolled' : ''}`}>
-        <Link to="/" className="llogo" aria-label="XenoCRM home">
-          <span className="llogo-mark">X</span>
-          <span>Xeno<em>CRM</em></span>
-        </Link>
+      <Link
+  to="/"
+  className="llogo"
+  aria-label="XenoCRM home"
+  onClick={() => {
+    closeNav();
+
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }, 100);
+  }}
+>
+  <span className="llogo-mark">X</span>
+  <span>Xeno<em>CRM</em></span>
+</Link>
         <button className="nav-toggle" onClick={() => setNavOpen(v => !v)} aria-label="Toggle navigation" aria-expanded={navOpen}>
           {navOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
