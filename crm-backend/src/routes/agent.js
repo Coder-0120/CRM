@@ -68,8 +68,13 @@ async function executeTool(name, args, userId) {
       const base      = { userId };
       const total     = await Customer.countDocuments(base);
       const highValue = await Customer.countDocuments({ ...base, totalSpend: { $gt: 10000 } });
-      const atRisk    = await Customer.countDocuments({ ...base, lastActiveDate: { $lt: new Date(Date.now() - 90 * 86400000) } });
-      const topCities = await Customer.aggregate([
+      const atRisk = await Customer.countDocuments({
+    ...base,
+    $or: [
+      { visitCount: { $lt: 10 } }
+        ]
+    });  
+          const topCities = await Customer.aggregate([
         { $match: base },
         { $group: { _id: '$city', count: { $sum: 1 } } },
         { $sort: { count: -1 } }, { $limit: 5 }

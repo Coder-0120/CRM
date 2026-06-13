@@ -27,8 +27,13 @@ router.get('/stats', async (req, res) => {
     const total        = await Customer.countDocuments(base);
     const newThisMonth = await Customer.countDocuments({ ...base, createdAt: { $gte: new Date(new Date().setDate(1)) } });
     const highValue    = await Customer.countDocuments({ ...base, totalSpend: { $gt: 10000 } });
-    const atRisk       = await Customer.countDocuments({ ...base, lastActiveDate: { $lt: new Date(Date.now() - 90 * 86400000) } });
-    res.json({ total, newThisMonth, highValue, atRisk });
+    const atRisk = await Customer.countDocuments({
+    ...base,
+    $or: [
+      { visitCount: { $lt: 10 } }
+        ]
+    });  
+  res.json({ total, newThisMonth, highValue, atRisk });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

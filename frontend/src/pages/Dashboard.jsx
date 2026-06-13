@@ -98,7 +98,7 @@ const totalClicked = (campaignData || []).reduce(
     { 
       label: 'At-Risk Customers', 
       value: custStats?.atRisk ?? '—',
-      sub: 'Inactive 90+ days',
+      sub: 'Less than 10 visits',
       color: '#d97706',
       icon: TrendingUp,
       bgGradient: 'linear-gradient(135deg, rgba(217,119,6,.08), rgba(251,146,60,.04))',
