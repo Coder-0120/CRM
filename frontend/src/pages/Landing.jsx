@@ -157,6 +157,7 @@ function AuroraCanvas() {
     }
     draw();
     return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -252,6 +253,7 @@ function CampaignPanel() {
   useEffect(() => {
     const init = setTimeout(runSequence, 700);
     return () => { clearTimeout(init); clearTimers(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -315,6 +317,7 @@ export default function Landing() {
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const closeNav = () => setNavOpen(false);

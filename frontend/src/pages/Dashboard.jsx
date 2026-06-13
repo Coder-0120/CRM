@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -38,12 +38,14 @@ export default function Dashboard() {
     refetchInterval: 10000
   });
 
+  // eslint-disable-next-line no-unused-vars
   const { data: orderStats } = useQuery({
     queryKey: ['orderStats'],
     queryFn: () => api.get('/api/orders/stats').then(r => r.data),
     refetchInterval: 10000
   });
 
+  // eslint-disable-next-line no-unused-vars
   const { data: overview } = useQuery({
     queryKey: ['overview'],
     queryFn: () => api.get('/api/analytics/overview').then(r => r.data),

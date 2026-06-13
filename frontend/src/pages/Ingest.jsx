@@ -3,7 +3,7 @@ import Papa from 'papaparse';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Upload, Plus, Database, TrendingUp } from 'lucide-react';
+import { Plus, Database, TrendingUp } from 'lucide-react';
 
 const CUSTOMER_SAMPLE = `name,email,phone,city,totalSpend,visitCount
 Priya Sharma,priya@example.com,9876543210,Mumbai,15000,8

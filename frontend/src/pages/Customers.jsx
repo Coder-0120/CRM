@@ -122,7 +122,7 @@ export default function Customers() {
                     <tbody>
                       {(data?.customers || []).map((c, idx) => {
                         const activity = getActivityColor(daysSince(c.lastActiveDate));
-                        const ActivityIcon = activity.icon;
+
                         return (
                           <motion.tr 
                             key={c._id}

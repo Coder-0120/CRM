@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
-import { Target, Grid3X3, Users, Zap } from 'lucide-react';
+import { Target, Zap } from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
