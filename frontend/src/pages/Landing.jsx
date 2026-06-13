@@ -46,14 +46,37 @@ const PROOF = [
   { value: 4, suffix: 'x', label: 'faster targeting' },
   { value: 2, suffix: '', label: 'service flow' },
 ];
-
 const FEEDBACK = [
-  'XenoAI made campaign setup feel effortless.',
-  'The dashboard is clean enough for daily tracking.',
-  'Segmentation finally feels fast and visual.',
-  'Our team can move from idea to send in minutes.',
-  'The AI suggestions are genuinely useful.',
-  'Live delivery stats make every campaign easier to trust.',
+  {
+    text: 'XenoAI made campaign setup feel effortless.',
+    name: 'Rahul Verma',
+    role: 'Marketing Manager'
+  },
+  {
+    text: 'The dashboard is clean enough for daily tracking.',
+    name: 'Priya Singh',
+    role: 'Growth Lead'
+  },
+  {
+    text: 'Segmentation finally feels fast and visual.',
+    name: 'Aman Gupta',
+    role: 'CRM Specialist'
+  },
+  {
+    text: 'Our team can move from idea to send in minutes.',
+    name: 'Sneha Sharma',
+    role: 'Campaign Manager'
+  },
+  {
+    text: 'The AI suggestions are genuinely useful.',
+    name: 'Rohit Kumar',
+    role: 'Digital Marketer'
+  },
+  {
+    text: 'Live delivery stats make every campaign easier to trust.',
+    name: 'Anjali Jain',
+    role: 'Growth Operator'
+  }
 ];
 
 function CountUp({ value, suffix = '' }) {
@@ -279,12 +302,16 @@ export default function Landing() {
         <motion.h2 className="stitle" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(0.05)}>Designed to feel human in daily use.</motion.h2>
         <div className="feedback-marquee">
           <div className="feedback-track">
-            {[...FEEDBACK, ...FEEDBACK].map((text, i) => (
-              <div className="quote-card" key={`${text}-${i}`}>
-                <p>{text}</p>
-                <span>Growth operator</span>
-              </div>
-            ))}
+           {[...FEEDBACK, ...FEEDBACK].map((item, i) => (
+  <div className="quote-card" key={`${item.name}-${i}`}>
+    <p>"{item.text}"</p>
+
+    <div className="quote-user">
+      <strong>{item.name}</strong>
+      <span>{item.role}</span>
+    </div>
+  </div>
+))}
           </div>
         </div>
       </section>
