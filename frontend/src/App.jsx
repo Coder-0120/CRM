@@ -15,21 +15,23 @@ import Campaigns from './pages/Campaigns';
 import Ingest    from './pages/Ingest';
 import './App.css';
 
-const qc = new QueryClient({ defaultOptions:{ queries:{ retry:1 } } });
+const qc = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
 function Shell({ children }) {
   const { user }  = useAuth();
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
+
   if (!user) return <Navigate to="/login" replace />;
+
   return (
     <div className="shell" data-theme={theme}>
-      <button className="ham" onClick={()=>setOpen(true)} aria-label="Menu">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
-        </svg>
-      </button>
-      <Sidebar open={open} onClose={()=>setOpen(false)} />
+      {/* Sidebar handles its own .ham button + overlay internally */}
+      <Sidebar
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
+      />
       <main className="page">{children}</main>
     </div>
   );
@@ -58,7 +60,10 @@ export default function App() {
         <AuthProvider>
           <BrowserRouter>
             <Routes_ />
-            <Toaster position="top-right" toastOptions={{style:{fontSize:13,borderRadius:10},duration:3000}} />
+            <Toaster
+              position="top-right"
+              toastOptions={{ style: { fontSize: 13, borderRadius: 10 }, duration: 3000 }}
+            />
           </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>
