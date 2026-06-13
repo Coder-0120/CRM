@@ -1,0 +1,26 @@
+# Place this file at the ROOT of your repo (same level as channel-service, crm-backend, frontend)
+
+services:
+  - type: web
+    name: xeno-crm-backend
+    runtime: node
+    rootDir: crm-backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+
+  - type: web
+    name: xeno-channel-service
+    runtime: node
+    rootDir: channel-service
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
