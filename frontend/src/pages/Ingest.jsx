@@ -293,7 +293,7 @@ export default function Ingest() {
           >
             <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', marginBottom: 24 }}>Add Single Customer</h3>
             <form onSubmit={addCustomer}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 {[
                   { key: 'name', label: 'Full Name', placeholder: 'Priya Sharma', required: true },
                   { key: 'email', label: 'Email', placeholder: 'priya@example.com', required: true, type: 'email' },

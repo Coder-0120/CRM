@@ -3,7 +3,31 @@ import api from '../api/axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { TrendingUp, Users, Target, Mail } from 'lucide-react';
+
+function AnimatedNumber({ value }) {
+  const isNumber = typeof value === 'number' && Number.isFinite(value);
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!isNumber) return;
+    let frame;
+    const start = performance.now();
+    const duration = 1000;
+    const tick = now => {
+      const pct = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - pct, 3);
+      setDisplay(Math.round(value * eased));
+      if (pct < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [isNumber, value]);
+
+  if (!isNumber) return <>{value}</>;
+  return <span>{display.toLocaleString()}</span>;
+}
 
 export default function Dashboard() {
   const { theme } = useTheme();
@@ -107,7 +131,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
           <div className="stat-label">{label}</div>
-          <div className="stat-value" style={{ color }}>{value}</div>
+          <div className="stat-value" style={{ color }}><AnimatedNumber value={value} /></div>
           <div className="stat-change up" style={{ fontSize: 12, color: 'var(--t3)' }}>{sub}</div>
         </div>
         <div style={{ 

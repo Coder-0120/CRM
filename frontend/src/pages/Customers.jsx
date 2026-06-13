@@ -165,7 +165,8 @@ export default function Customers() {
                   </table>
                 </div>
 
-                <motion.div 
+                <motion.div
+                  className="pager"
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--bd)' }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

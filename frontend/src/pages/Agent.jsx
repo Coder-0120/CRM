@@ -43,50 +43,28 @@ function Message({ msg }) {
       transition={{ duration: 0.3 }}
     >
       <div style={{ 
-        width: 40, 
-        height: 40, 
-        borderRadius: 20, 
+        width: 40, height: 40, borderRadius: 20, 
         background: msg.role === 'ai' ? 'linear-gradient(135deg, #1e40af, #3b82f6)' : 'linear-gradient(135deg, #059669, #10b981)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        color: 'white',
-        fontWeight: 700,
-        flexShrink: 0,
-        fontSize: 14
+        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+        color: 'white', fontWeight: 700, flexShrink: 0, fontSize: 14
       }}>
         {msg.role === 'ai' ? 'X' : 'You'}
       </div>
       <div style={{ flex: 1 }}>
         <div style={{
           background: msg.role === 'ai' ? 'var(--bg2)' : 'linear-gradient(135deg, rgba(108,99,255,.2), rgba(139,133,255,.1))',
-          padding: '12px 16px',
-          borderRadius: 12,
-          color: 'var(--t1)',
-          fontSize: 14,
-          lineHeight: 1.6,
-          maxWidth: '100%',
-          wordBreak: 'break-word',
+          padding: '12px 16px', borderRadius: 12, color: 'var(--t1)',
+          fontSize: 14, lineHeight: 1.6, maxWidth: '100%', wordBreak: 'break-word',
           border: msg.role === 'ai' ? '1px solid var(--bd)' : '1px solid rgba(108,99,255,.3)'
         }}>
           {msg.content.split('\n').map((line, i) => (
-            <span key={i}>
-              {line}
-              {i < msg.content.split('\n').length - 1 && <br />}
-            </span>
+            <span key={i}>{line}{i < msg.content.split('\n').length - 1 && <br />}</span>
           ))}
         </div>
         {msg.toolsUsed?.length > 0 && (
           <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {msg.toolsUsed.map(t => (
-              <span key={t} style={{ 
-                fontSize: 11, 
-                background: 'rgba(108,99,255,.15)',
-                color: '#1e40af',
-                padding: '4px 10px',
-                borderRadius: 12,
-                fontWeight: 600
-              }}>
+              <span key={t} style={{ fontSize: 11, background: 'rgba(108,99,255,.15)', color: '#1e40af', padding: '4px 10px', borderRadius: 12, fontWeight: 600 }}>
                 🔧 {t.replace(/_/g, ' ')}
               </span>
             ))}
@@ -137,11 +115,8 @@ export default function Agent() {
         toolsUsed: res.data.toolsUsed || []
       }]);
     } catch (e) {
-      setMessages(prev => [...prev, {
-        role: 'ai',
-        content: 'Sorry, something went wrong. Please check that the backend is running and try again.',
-        toolsUsed: []
-      }]);
+      const errMsg = e.response?.data?.error || 'Sorry, something went wrong. Please check that the backend is running and try again.';
+      setMessages(prev => [...prev, { role: 'ai', content: errMsg, toolsUsed: [] }]);
     } finally {
       setLoading(false);
     }
@@ -155,13 +130,8 @@ export default function Agent() {
   };
 
   return (
-    <div style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <motion.div 
-        className="page-header"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
+    <div className="agent-page" style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <motion.div className="page-header" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <div className="page-header-left">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Sparkles size={28} style={{ color: '#1e40af' }} />
@@ -171,42 +141,17 @@ export default function Agent() {
         </div>
       </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20, flex: 1, minHeight: 0 }}>
-        {/* Chat Panel */}
-        <motion.div 
-          className="card"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
-        >
+      <div className="agent-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20, flex: 1, minHeight: 0 }}>
+        <motion.div className="card" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.1 }} style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--bd)' }}>
-            <div style={{ 
-              width: 44, 
-              height: 44, 
-              background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-              borderRadius: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: 16
-            }}>
-              X
-            </div>
+            <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #1e40af, #3b82f6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 16 }}>X</div>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>XenoAI</h3>
-              <p style={{ fontSize: 12, color: 'var(--t2)', margin: '4px 0 0 0' }}>🟢 Online — powered by Claude</p>
+              <p style={{ fontSize: 12, color: 'var(--t2)', margin: '4px 0 0 0' }}>🟢 Online — powered by Gemini / Groq</p>
             </div>
           </div>
 
-          <div style={{ 
-            flex: 1, 
-            overflowY: 'auto', 
-            marginBottom: 20,
-            paddingRight: 8
-          }}>
+          <div style={{ flex: 1, overflowY: 'auto', marginBottom: 20, paddingRight: 8 }}>
             {messages.map((msg, i) => <Message key={i} msg={msg} />)}
             {loading && <TypingIndicator />}
             <div ref={bottomRef} />
@@ -220,36 +165,12 @@ export default function Agent() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              style={{
-                flex: 1,
-                padding: 12,
-                background: 'var(--bg2)',
-                border: '1px solid var(--bd)',
-                borderRadius: 8,
-                color: 'var(--t1)',
-                fontSize: 14,
-                fontFamily: 'inherit',
-                resize: 'none',
-                transition: 'all 0.3s ease'
-              }}
+              style={{ flex: 1, padding: 12, background: 'var(--bg2)', border: '1px solid var(--bd)', borderRadius: 8, color: 'var(--t1)', fontSize: 14, fontFamily: 'inherit', resize: 'none', transition: 'all 0.3s ease' }}
             />
             <motion.button
               onClick={() => sendMessage()}
               disabled={loading || !input.trim()}
-              style={{
-                width: 44,
-                height: 44,
-                background: input.trim() && !loading ? 'linear-gradient(135deg, #1e40af, #3b82f6)' : 'var(--bg2)',
-                border: 'none',
-                borderRadius: 8,
-                color: input.trim() && !loading ? 'white' : 'var(--t3)',
-                cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.3s ease',
-                flexShrink: 0
-              }}
+              style={{ width: 44, height: 44, background: input.trim() && !loading ? 'linear-gradient(135deg, #1e40af, #3b82f6)' : 'var(--bg2)', border: 'none', borderRadius: 8, color: input.trim() && !loading ? 'white' : 'var(--t3)', cursor: input.trim() && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease', flexShrink: 0 }}
               whileHover={input.trim() && !loading ? { scale: 1.05 } : {}}
               whileTap={input.trim() && !loading ? { scale: 0.95 } : {}}
             >
@@ -258,13 +179,7 @@ export default function Agent() {
           </div>
         </motion.div>
 
-        {/* Suggestions Panel */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: 0 }}
-        >
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: 0 }}>
           <div className="card" style={{ flex: 1, overflowY: 'auto' }}>
             <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Zap size={16} style={{ color: '#f59e0b' }} />
@@ -279,22 +194,7 @@ export default function Agent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   whileHover={{ x: 4 }}
-                  style={{
-                    background: 'var(--bg2)',
-                    border: '1px solid var(--bd)',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    color: 'var(--t1)',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.3s ease',
-                    lineHeight: 1.4
-                  }}
-                  onHover={(e) => {
-                    e.currentTarget.style.background = 'var(--bg3)';
-                    e.currentTarget.style.borderColor = '#1e40af';
-                  }}
+                  style={{ background: 'var(--bg2)', border: '1px solid var(--bd)', padding: '10px 12px', borderRadius: 8, color: 'var(--t1)', fontSize: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.3s ease', lineHeight: 1.4 }}
                 >
                   {s}
                 </motion.button>
@@ -302,7 +202,11 @@ export default function Agent() {
             </div>
           </div>
 
-          <div className="card" style={{ background: 'linear-gradient(135deg, rgba(108,99,255,.1), rgba(139,133,255,.05)), border: 1px solid rgba(108,99,255,.2)' }}>
+          {/* FIXED: background and border are now separate style properties */}
+          <div className="card" style={{
+            background: 'linear-gradient(135deg, rgba(108,99,255,.1), rgba(139,133,255,.05))',
+            border: '1px solid rgba(108,99,255,.2)'
+          }}>
             <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>💡 How it works</h4>
             <p style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.6, margin: 0 }}>
               XenoAI uses advanced AI with tool use. When you describe your goal, it automatically calls the right functions — segmenting, writing, and launching campaigns.

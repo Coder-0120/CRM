@@ -23,10 +23,12 @@ Your capabilities:
 
 When a marketer describes what they want:
 1. First preview the segment to know the audience size
-2. Create the segment with well-defined rules
+2. Create the segment with well-defined rules — the response will include a "segmentId" field (a MongoDB ObjectId hex string)
 3. Craft a personalized message (use {{name}} and {{city}} for personalization)
-4. Create and send the campaign
-5. Confirm with key metrics
+4. Call create_campaign using the EXACT "segmentId" value returned by create_segment — NEVER use the segment name, never invent an id
+5. Send the campaign and confirm with key metrics
+
+CRITICAL RULE: The segmentId argument for create_campaign MUST be the exact "segmentId" string returned by the create_segment tool call result. It looks like "6847a1c2e3f..." (a 24-character hex string). Never pass a human-readable name like "HighSpenderPune" as the segmentId.
 
 Be proactive and specific about numbers. Keep messages short and action-oriented.`;
 
@@ -152,18 +154,31 @@ async function executeTool(name, args) {
     }
 
     case 'create_campaign': {
+      // FIX: AI sometimes passes segment name instead of ObjectId -- resolve it
+      let segmentId = args.segmentId;
+      const isValidObjectId = /^[a-f\d]{24}$/i.test(segmentId);
+      if (!isValidObjectId) {
+        const found = await Segment.findOne({ name: { $regex: new RegExp(segmentId, 'i') } }).sort({ createdAt: -1 });
+        if (!found) return { error: 'Invalid segmentId "' + segmentId + '". Please call create_segment first and use the returned segmentId.' };
+        segmentId = found._id.toString();
+      }
       const campaign = await Campaign.create({
-        name: args.name, segmentId: args.segmentId,
+        name: args.name, segmentId,
         message: args.message, channel: args.channel || 'email'
       });
       return { campaignId: campaign._id.toString(), name: campaign.name };
     }
 
     case 'send_campaign': {
+      // FIX: Validate campaignId is a real ObjectId before querying
+      const isValidCampaignId = /^[a-f\d]{24}$/i.test(args.campaignId);
+      if (!isValidCampaignId) return { error: `Invalid campaignId "${args.campaignId}". Use the campaignId returned by create_campaign.` };
       const campaign = await Campaign.findById(args.campaignId);
       if (!campaign) return { error: 'Campaign not found' };
 
       const segment   = await Segment.findById(campaign.segmentId);
+      if (!segment) return { error: 'Segment not found for this campaign' };
+
       const customers = await getAudienceForSegment(segment);
 
       campaign.status      = 'sending';
@@ -173,26 +188,29 @@ async function executeTool(name, args) {
 
       const logs = customers.map(c => ({
         campaignId: campaign._id, customerId: c._id, customerEmail: c.email,
-        message: campaign.message.replace('{{name}}', c.name).replace('{{city}}', c.city),
+        message: campaign.message.replace(/\{\{name\}\}/g, c.name).replace(/\{\{city\}\}/g, c.city),
         channel: campaign.channel, status: 'sent',
         statusHistory: [{ status: 'sent', timestamp: new Date() }]
       }));
 
       const savedLogs = await CommunicationLog.insertMany(logs);
+      const CHANNEL_SERVICE_URL = process.env.CHANNEL_SERVICE_URL || 'http://localhost:5001';
       const CALLBACK_URL = process.env.CALLBACK_URL || 'http://localhost:5000/api/webhook/delivery';
 
       savedLogs.forEach(log => {
-        axios.post(`${process.env.CHANNEL_SERVICE_URL}/send`, {
+        axios.post(`${CHANNEL_SERVICE_URL}/send`, {
           logId: log._id, campaignId: campaign._id,
           recipient: log.customerEmail, message: log.message,
           channel: campaign.channel, callbackUrl: CALLBACK_URL
-        }).catch(() => {});
+        }).catch(err => console.error('[Agent] Channel service error:', err.message));
       });
 
       return { success: true, recipients: customers.length, message: `Campaign sent to ${customers.length} customers! Delivery updates will arrive over the next 30 seconds.` };
     }
 
     case 'get_campaign_stats': {
+      const isValidStatId = /^[a-f\d]{24}$/i.test(args.campaignId);
+      if (!isValidStatId) return { error: `Invalid campaignId "${args.campaignId}". Use the campaignId returned by create_campaign.` };
       const campaign = await Campaign.findById(args.campaignId).populate('segmentId', 'name');
       if (!campaign) return { error: 'Campaign not found' };
       const deliveryRate = campaign.stats.sent > 0 ? ((campaign.stats.delivered / campaign.stats.sent) * 100).toFixed(1) : 0;
@@ -212,16 +230,21 @@ async function executeTool(name, args) {
 
 // ── GEMINI handler ───────────────────────────────────────────────────────────
 async function runGemini(messages) {
+  // FIX: Use gemini-2.0-flash (gemini-1.5-flash is deprecated/unreliable)
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash',
     systemInstruction: SYSTEM_PROMPT,
     tools: geminiTools
   });
 
+  // FIX: Properly build history - must start with a 'user' turn for Gemini
+  // messages from frontend arrive with role 'user' or 'assistant'
   const allHistory = messages.slice(0, -1).map(m => ({
     role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }]
+    parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
   }));
+
+  // Gemini requires history to start with 'user' role - skip leading model messages
   const firstUserIdx = allHistory.findIndex(m => m.role === 'user');
   const history = firstUserIdx === -1 ? [] : allHistory.slice(firstUserIdx);
 
@@ -263,34 +286,97 @@ async function runGemini(messages) {
 async function runGroq(messages) {
   const groqMessages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    ...messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : m.role, content: m.content }))
+    ...messages.map(m => ({
+      role: m.role === 'ai' ? 'assistant' : m.role,
+      content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+    }))
   ];
 
   const toolsUsed = [];
+  // FIX: Track real IDs returned by tools so we can override hallucinated ones
+  const realIds = { segmentId: null, campaignId: null };
+
   let loopCount = 0;
 
-  while (loopCount < 6) {
+  while (loopCount < 10) {
     loopCount++;
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: groqMessages,
-      tools: groqTools,
-      tool_choice: 'auto'
-    });
+
+    let completion;
+    try {
+      completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
+        tools: groqTools,
+        tool_choice: 'auto',
+        max_tokens: 1024
+      });
+    } catch (groqErr) {
+      // FIX: Groq sometimes emits malformed tool call XML — on tool_use_failed,
+      // strip the last assistant message and ask it to continue in plain text
+      if (groqErr?.error?.error?.code === 'tool_use_failed') {
+        console.warn('[Groq] Malformed tool call, retrying without tools...');
+        const lastAssistant = [...groqMessages].reverse().find(m => m.role === 'assistant');
+        if (lastAssistant) groqMessages.splice(groqMessages.lastIndexOf(lastAssistant), 1);
+        // One plain-text retry
+        const fallback = await groq.chat.completions.create({
+          model: 'llama-3.3-70b-versatile',
+          messages: groqMessages,
+          max_tokens: 512
+        });
+        const fallbackMsg = fallback.choices[0].message;
+        return { reply: fallbackMsg.content || `✅ Done! Completed: ${toolsUsed.join(', ')}.\n\nCheck the **Campaigns** page for live delivery stats!`, toolsUsed };
+      }
+      throw groqErr;
+    }
 
     const msg = completion.choices[0].message;
     groqMessages.push(msg);
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
-      return { reply: msg.content || 'Done!', toolsUsed };
+      return { reply: msg.content || `✅ Done! Completed: ${toolsUsed.join(', ')}.\n\nCheck the **Campaigns** page for live delivery stats!`, toolsUsed };
     }
 
     for (const call of msg.tool_calls) {
       const name = call.function.name;
-      const args = JSON.parse(call.function.arguments || '{}');
+      let args;
+      try {
+        args = JSON.parse(call.function.arguments || '{}');
+      } catch {
+        console.warn(`[Groq] Failed to parse args for ${name}, skipping`);
+        groqMessages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify({ error: 'Invalid arguments JSON' }) });
+        continue;
+      }
+
+      // FIX: Override hallucinated IDs with the real ones we captured from previous tool results
+      if (name === 'create_campaign' && realIds.segmentId) {
+        const isValidOid = /^[a-f\d]{24}$/i.test(args.segmentId);
+        if (!isValidOid) {
+          console.warn(`[Groq] Overriding hallucinated segmentId "${args.segmentId}" with real "${realIds.segmentId}"`);
+          args.segmentId = realIds.segmentId;
+        }
+      }
+      if (name === 'send_campaign' && realIds.campaignId) {
+        const isValidOid = /^[a-f\d]{24}$/i.test(args.campaignId);
+        if (!isValidOid) {
+          console.warn(`[Groq] Overriding hallucinated campaignId "${args.campaignId}" with real "${realIds.campaignId}"`);
+          args.campaignId = realIds.campaignId;
+        }
+      }
+      if (name === 'get_campaign_stats' && realIds.campaignId) {
+        const isValidOid = /^[a-f\d]{24}$/i.test(args.campaignId);
+        if (!isValidOid) {
+          args.campaignId = realIds.campaignId;
+        }
+      }
+
       console.log(`[Groq] Tool: ${name}`, args);
       toolsUsed.push(name);
       const result = await executeTool(name, args);
+
+      // FIX: Capture real IDs as soon as tools return them
+      if (result.segmentId) realIds.segmentId = result.segmentId;
+      if (result.campaignId) realIds.campaignId = result.campaignId;
+
       groqMessages.push({
         role: 'tool',
         tool_call_id: call.id,
@@ -306,6 +392,12 @@ async function runGroq(messages) {
 router.post('/chat', async (req, res) => {
   try {
     const { messages } = req.body;
+
+    // FIX: Validate that messages array is present and not empty
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'messages array is required' });
+    }
+
     let result;
     let provider = 'gemini';
 

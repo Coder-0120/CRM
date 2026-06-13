@@ -2,308 +2,282 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
-import { ChevronRight, Sparkles, ArrowRight } from 'lucide-react';
+import {
+  ArrowRight,
+  BarChart3,
+  Bot,
+  ChevronRight,
+  Database,
+  Menu,
+  MailCheck,
+  MessageSquareText,
+  Moon,
+  Route,
+  Sparkles,
+  Sun,
+  Target,
+  UploadCloud,
+  X,
+  Zap
+} from 'lucide-react';
 
 const FEATS = [
-  { ic:'🤖', t:'AI Campaign Agent',   d:'Describe your goal in plain English. XenoAI segments the audience, writes the message, and fires the campaign — automatically.' },
-  { ic:'🎯', t:'Smart Segmentation',  d:'Build precise audiences using spend, activity, city and behaviour with multi-rule AND/OR logic.' },
-  { ic:'📊', t:'Live Analytics',       d:'Watch delivery stats — delivered, opened, clicked — update in real time on your dashboard.' },
-  { ic:'📁', t:'Flexible Import',     d:'Upload customers and orders via CSV drag-and-drop, or add records one at a time through clean forms.' },
-  { ic:'🔄', t:'Async Delivery Loop', d:'Two-service microarchitecture: a stubbed channel service simulates the full delivery lifecycle with async callbacks.' },
-  { ic:'🌙', t:'Dark & Light Themes', d:'Beautiful, fully responsive UI with smooth theme switching — designed for long marketing sessions.' },
+  { ic: Bot, t: 'AI Campaign Agent', d: 'Describe a goal in plain English and let XenoAI build the segment, message, and campaign path.' },
+  { ic: Target, t: 'Smart Segmentation', d: 'Target by spend, activity, city, visits, and custom rules with clean AND/OR logic.' },
+  { ic: BarChart3, t: 'Live Analytics', d: 'Track delivery, opens, clicks, and audience behavior as campaigns move.' },
+  { ic: UploadCloud, t: 'Flexible Import', d: 'Bring customers and orders through CSV uploads or fast manual forms.' },
+  { ic: Route, t: 'Delivery Loop', d: 'A two-service flow simulates async campaign delivery from send to callback.' },
+  { ic: Sparkles, t: 'Polished Workspace', d: 'Responsive layouts, light-first design, and subtle motion for daily marketing work.' },
 ];
 
 const STEPS = [
-  { n:'1', t:'Ingest Your Data',   d:'Upload customer and order CSVs or add them manually.' },
-  { n:'2', t:'Describe Your Goal', d:'Tell XenoAI what you want in plain English.' },
-  { n:'3', t:'AI Executes',        d:'Agent segments, crafts the message, and launches.' },
-  { n:'4', t:'Track Live Results', d:'Watch delivery, open, and click stats in real time.' },
+  { n: '01', t: 'Import customer data', d: 'Upload CSV files or add customer and order records manually.', icon: Database },
+  { n: '02', t: 'Ask the AI agent', d: 'Tell XenoAI who you want to reach and what outcome matters.', icon: MessageSquareText },
+  { n: '03', t: 'Launch the campaign', d: 'The agent creates the audience, writes the message, and sends.', icon: Zap },
+  { n: '04', t: 'Measure every result', d: 'Watch delivery, open, and click performance update live.', icon: MailCheck },
 ];
 
-const v = (d=0) => ({ hidden:{opacity:0,y:26}, visible:{opacity:1,y:0,transition:{duration:.55,delay:d,ease:[.22,1,.36,1]}} });
-const vH = (d=0) => ({ hidden:{opacity:0,y:40}, visible:{opacity:1,y:0,transition:{duration:.6,delay:d,ease:'easeOut'}} });
-const vS = (d=0) => ({ hidden:{opacity:0,scale:0.9}, visible:{opacity:1,scale:1,transition:{duration:.5,delay:d}} });
+const PROOF = [
+  { value: 100, suffix: '+', label: 'seed customers' },
+  { value: 30, suffix: 's', label: 'campaign setup' },
+  { value: 4, suffix: 'x', label: 'faster targeting' },
+  { value: 2, suffix: '', label: 'service flow' },
+];
+
+const FEEDBACK = [
+  'XenoAI made campaign setup feel effortless.',
+  'The dashboard is clean enough for daily tracking.',
+  'Segmentation finally feels fast and visual.',
+  'Our team can move from idea to send in minutes.',
+  'The AI suggestions are genuinely useful.',
+  'Live delivery stats make every campaign easier to trust.',
+];
+
+function CountUp({ value, suffix = '' }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    let frame;
+    const start = performance.now();
+    const duration = 1200;
+    const tick = now => {
+      const pct = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - pct, 3);
+      setDisplay(Math.round(value * eased));
+      if (pct < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+
+  return <span>{display}{suffix}</span>;
+}
+
+const rise = (delay = 0) => ({
+  hidden: { opacity: 0, y: 26 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.58, delay, ease: [0.22, 1, 0.36, 1] } }
+});
 
 export default function Landing() {
   const { theme, toggle } = useTheme();
   const [scrolled, setScrolled] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
-    const fn = () => {
-      setScrolled(window.scrollY > 30);
-      setScrollY(window.scrollY);
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setScrolled(window.scrollY > 24);
+      setProgress(max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0);
     };
-    window.addEventListener('scroll', fn);
-    return () => window.removeEventListener('scroll', fn);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const closeNav = () => setNavOpen(false);
+
   return (
-<div className="land" data-theme={theme}>
-        {/* Nav */}
+    <div className="land" data-theme={theme}>
+      <div className="scroll-progress" style={{ width: `${progress}%` }} />
+
       <nav className={`lnav ${scrolled ? 'scrolled' : ''}`}>
-        <Link to="/" className="llogo">
-          <motion.div 
-            className="llogo-dot"
-            animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          Xeno<span style={{color:'#60a5fa'}}>CRM</span>
+        <Link to="/" className="llogo" aria-label="XenoCRM home">
+          <span className="llogo-mark">X</span>
+          <span>Xeno<em>CRM</em></span>
         </Link>
-        <div className="lnav-links">
-          <a href="#features">Features</a>
-          <a href="#how">How it works</a>
-          <button className="lnav-theme" onClick={toggle}>
-            {theme === 'dark'
-              ? <><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>Light</>
-              : <><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>Dark</>
-            }
-          </button>
-          <Link to="/login"><button className="lbtn-g" style={{padding:'8px 20px',fontSize:13}}>Sign in</button></Link>
-          <Link to="/login"><button className="lbtn-p" style={{padding:'8px 20px',fontSize:13}}>Get started →</button></Link>
+        <button className="nav-toggle" onClick={() => setNavOpen(v => !v)} aria-label="Toggle navigation" aria-expanded={navOpen}>
+          {navOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        <div className={`lnav-links ${navOpen ? 'open' : ''}`}>
+          <div className="lnav-tabs">
+            <a href="#features" onClick={closeNav}>Features</a>
+            <a href="#how" onClick={closeNav}>How it works</a>
+            <a href="#feedback" onClick={closeNav}>Feedback</a>
+          </div>
+          <div className="lnav-actions">
+            <button className="lnav-theme" onClick={toggle} aria-label="Toggle theme">
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              {theme === 'dark' ? 'Light' : 'Dark'}
+            </button>
+            <Link to="/login" className="lmini" onClick={closeNav}>Sign in</Link>
+            <Link to="/login" className="lmini primary" onClick={closeNav}>Get started</Link>
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
       <section className="hero">
-        <div className="hbg">
-          <motion.div 
-            className="horb" 
-            style={{width:700,height:700,top:-200,left:'50%',transform:'translateX(-50%)',background:'radial-gradient(circle,rgba(30,64,175,.14),transparent 70%)'}}
-            animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 8, repeat: Infinity }}
-          />
-          <motion.div 
-            className="horb" 
-            style={{width:400,height:400,bottom:-100,left:'5%',background:'radial-gradient(circle,rgba(59,130,246,.1),transparent 70%)'}}
-            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
-            transition={{ duration: 10, repeat: Infinity, delay: 2 }}
-          />
-          <motion.div 
-            className="horb" 
-            style={{width:300,height:300,top:80,right:'5%',background:'radial-gradient(circle,rgba(8,145,178,.08),transparent 70%)'}}
-            animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 12, repeat: Infinity, delay: 4 }}
-          />
+        <div className="hero-bg" aria-hidden="true">
+          <motion.span className="beam beam-a" animate={{ x: [0, 30, 0], y: [0, -18, 0] }} transition={{ duration: 12, repeat: Infinity }} />
+          <motion.span className="beam beam-b" animate={{ x: [0, -24, 0], y: [0, 22, 0] }} transition={{ duration: 14, repeat: Infinity }} />
+          <motion.span className="grid-glow" animate={{ opacity: [0.35, 0.7, 0.35] }} transition={{ duration: 8, repeat: Infinity }} />
+          <div className="sprinkle-field">
+            {Array.from({ length: 16 }).map((_, i) => <span key={i} />)}
+          </div>
         </div>
 
-        <motion.div 
-          className="hbadge" 
-          initial={{opacity:0,y:-12}} 
-          animate={{opacity:1,y:0}} 
-          transition={{duration:.5}}
-          whileHover={{ scale: 1.05, y: -14 }}
-        >
-          <span className="hbadge-dot" />
-          ✨ AI-Native CRM · Powered by Gemini · Built for D2C Brands
+        <motion.div className="hbadge" initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <Sparkles size={15} />
+          AI-native CRM for D2C growth teams
         </motion.div>
 
-        <motion.h1 
-          className="htitle" 
-          initial={{opacity:0,y:24}} 
-          animate={{opacity:1,y:0}} 
-          transition={{duration:.6,delay:.1}}
-          style={{ y: scrollY * 0.3 }}
-        >
-          Reach your shoppers<br/>with <span className="gr">intelligent</span><br/>campaigns
+        <motion.h1 className="htitle" initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.08 }}>
+          Turn scattered customer signals into campaigns people actually notice.
         </motion.h1>
 
-        <motion.p 
-          className="hsub" 
-          initial={{opacity:0,y:20}} 
-          animate={{opacity:1,y:0}} 
-          transition={{duration:.6,delay:.2}}
-          style={{ y: scrollY * 0.2 }}
-        >
-          XenoCRM helps D2C brands decide who to talk to, what to say, and when — powered by an AI agent that executes campaigns end-to-end in seconds.
+        <motion.p className="hsub" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.18 }}>
+          Segment smarter, write faster, and monitor every send from one responsive, light-first workspace.
         </motion.p>
 
-        <motion.div 
-          className="hbtns" 
-          initial={{opacity:0,y:16}} 
-          animate={{opacity:1,y:0}} 
-          transition={{duration:.6,delay:.3}}
-        >
-          <Link to="/login">
-            <motion.button 
-              className="lbtn-p"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Launch your first campaign <ArrowRight size={16} />
-            </motion.button>
-          </Link>
-          <motion.a 
-            href="#how"
-            className="lbtn-g"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            ▶ See how it works
-          </motion.a>
+        <motion.div className="hbtns" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.28 }}>
+          <Link to="/login" className="lbtn-p">Launch a campaign <ArrowRight size={17} /></Link>
+          <a href="#how" className="lbtn-g">See how it works</a>
         </motion.div>
 
-        <motion.div 
-          className="hproof" 
-          initial={{opacity:0}} 
-          animate={{opacity:1}} 
-          transition={{duration:.6,delay:.55}}
-        >
-          {[{v:'100+',l:'Pre-seeded customers'},{v:'AI✦',l:'Powered by Gemini'},{v:'2',l:'Microservices'},{v:'<30s',l:'Campaign to delivery'}].map((p,i)=>(
-            <motion.div 
-              key={i} 
-              className="hpitem"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <motion.div 
-                className="hpval" 
-                style={{color:i===0?'#60a5fa':'#fff'}}
-                whileHover={{ scale: 1.1, y: -5 }}
-              >
-                {p.v}
-              </motion.div>
-              <div className="hplbl">{p.l}</div>
+        <motion.div className="hero-panel" initial={{ opacity: 0, y: 34 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.38 }}>
+          <div className="mini-window">
+            <div className="mini-top"><span /><span /><span /></div>
+            <div className="mini-query">
+              <Sparkles size={18} />
+              Win back high-value customers who have not bought recently
+            </div>
+            <div className="mini-flow">
+              {['Find audience', 'Write offer', 'Send campaign', 'Track results'].map((item, i) => (
+                <motion.div key={item} className="mini-step" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.65 + i * 0.12 }}>
+                  <span>{i + 1}</span>
+                  {item}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="hproof">
+          {PROOF.map((p, i) => (
+            <motion.div key={p.label} className="hpitem" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(i * 0.06)}>
+              <div className="hpval"><CountUp value={p.value} suffix={p.suffix} /></div>
+              <div className="hplbl">{p.label}</div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </section>
 
-      {/* Features */}
       <section className="lsec" id="features">
-        <motion.span 
-          className="slbl" 
-          variants={v()} 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{once:true}}
-        >
-          ✨ Features
-        </motion.span>
-        <motion.h2 
-          className="stitle" 
-          variants={v(.05)} 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{once:true}}
-        >
-          Everything to run<br/>great campaigns
-        </motion.h2>
-        <motion.p 
-          className="sdesc" 
-          variants={v(.1)} 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{once:true}}
-        >
-          Built for D2C brands who want to move fast and reach their shoppers intelligently.
+        <motion.span className="slbl" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise()}>Features</motion.span>
+        <motion.h2 className="stitle" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(0.05)}>Built like a real marketing control room.</motion.h2>
+        <motion.p className="sdesc" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(0.1)}>
+          The interface stays calm, fast, and readable while still feeling alive.
         </motion.p>
         <div className="fgrid">
-          {FEATS.map((f,i)=>(
-            <motion.div 
-              key={i} 
-              className="fc" 
-              variants={vS(i*.08)} 
-              initial="hidden" 
-              whileInView="visible" 
-              viewport={{once:true}}
-              whileHover={{ y: -8 }}
-            >
-              <div className="fc-ic">{f.ic}</div>
-              <h3>{f.t}</h3>
-              <p>{f.d}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* How */}
-      <section className="lsec lsec-dk" id="how">
-        <div style={{textAlign:'center'}}>
-          <motion.span 
-            className="slbl" 
-            variants={v()} 
-            initial="hidden" 
-            whileInView="visible" 
-            viewport={{once:true}}
-          >
-            🚀 How it works
-          </motion.span>
-          <motion.h2 
-            className="stitle" 
-            variants={v(.05)} 
-            initial="hidden" 
-            whileInView="visible" 
-            viewport={{once:true}}
-          >
-            From data to delivered<br/>in minutes, not days
-          </motion.h2>
-        </div>
-        <div className="steps" style={{margin:'56px auto 0'}}>
-          {STEPS.map((s,i)=>(
-            <motion.div 
-              key={i} 
-              className="step" 
-              variants={vH(i*.12)} 
-              initial="hidden" 
-              whileInView="visible" 
-              viewport={{once:true}}
-            >
-              <motion.div 
-                className="step-c"
-                whileHover={{ scale: 1.1, boxShadow: '0 0 0 20px rgba(30,64,175,.15)' }}
-              >
-                {s.n}
+          {FEATS.map((f, i) => {
+            const Icon = f.ic;
+            return (
+              <motion.div key={f.t} className="fc" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(i * 0.06)} whileHover={{ y: -8 }}>
+                <div className="fc-ic"><Icon size={24} /></div>
+                <h3>{f.t}</h3>
+                <p>{f.d}</p>
               </motion.div>
-              <h4>{s.t}</h4>
-              <p>{s.d}</p>
-            </motion.div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
-      {/* CTA */}
+      <section className="lsec lsec-dk" id="how">
+        <div className="section-center">
+          <motion.span className="slbl" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise()}>How it works</motion.span>
+          <motion.h2 className="stitle" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(0.05)}>Scroll through the campaign path.</motion.h2>
+        </div>
+
+        <div className="work-timeline">
+          <div className="work-line" />
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <motion.article key={s.n} className="work-step" initial={{ opacity: 0, x: i % 2 ? 34 : -34 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.55, delay: i * 0.08 }}>
+                <div className="work-dot"><Icon size={20} /></div>
+                <span>{s.n}</span>
+                <h3>{s.t}</h3>
+                <p>{s.d}</p>
+              </motion.article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="lsec feedback-sec" id="feedback">
+        <motion.span className="slbl" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise()}>Customer feedback</motion.span>
+        <motion.h2 className="stitle" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(0.05)}>Designed to feel human in daily use.</motion.h2>
+        <div className="feedback-marquee">
+          <div className="feedback-track">
+            {[...FEEDBACK, ...FEEDBACK].map((text, i) => (
+              <div className="quote-card" key={`${text}-${i}`}>
+                <p>{text}</p>
+                <span>Growth operator</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="lcta">
-        <motion.h2 
-          variants={v()} 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{once:true}}
-        >
-          Ready to launch your<br/>first AI campaign?
-        </motion.h2>
-        <motion.p 
-          variants={v(.07)} 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{once:true}}
-        >
-          Sign up free or use demo credentials to explore the full platform.
-        </motion.p>
-        <motion.div 
-          variants={v(.14)} 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{once:true}}
-        >
-          <Link to="/login">
-            <motion.button 
-              className="lbtn-p" 
-              style={{fontSize:16,padding:'15px 44px'}}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Get started free <ChevronRight size={18} />
-            </motion.button>
-          </Link>
+        <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise()}>Ready to launch your first AI campaign?</motion.h2>
+        <motion.p initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(0.08)}>Use the demo login or create an account and explore the full CRM flow.</motion.p>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={rise(0.14)}>
+          <Link to="/login" className="lbtn-p big">Get started free <ChevronRight size={18} /></Link>
         </motion.div>
       </section>
 
       <footer className="lfoot">
-        <span><strong style={{color:'rgba(255,255,255,.6)'}}>XenoCRM</strong> — Xeno Engineering Assignment 2026</span>
-        <span>Made with ♥ by Anshul</span>
+        <div className="footer-grid">
+          <div>
+            <Link to="/" className="llogo footer-logo">
+              <span className="llogo-mark">X</span>
+              <span>Xeno<em>CRM</em></span>
+            </Link>
+            <p>AI campaign workspace for segmentation, messaging, delivery, and live analytics.</p>
+          </div>
+          <div>
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="#how">How it works</a>
+            <a href="#feedback">Feedback</a>
+          </div>
+          <div>
+            <h4>Workspace</h4>
+            <Link to="/login">Dashboard</Link>
+            <Link to="/login">AI Agent</Link>
+            <Link to="/login">Campaigns</Link>
+          </div>
+          <div>
+            <h4>Project</h4>
+            <span>Xeno Engineering Assignment 2026</span>
+            <span>Built by Anshul</span>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <span>Light-first, responsive, and ready for demo.</span>
+          <span>XenoCRM</span>
+        </div>
       </footer>
     </div>
   );

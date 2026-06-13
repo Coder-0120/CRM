@@ -171,7 +171,7 @@ export default function Campaigns() {
                   variants={cardVariants}
                   whileHover={{ boxShadow: 'var(--sh2)' }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--bd)' }}>
+                  <div className="campaign-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--bd)' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                         <div style={{ color: 'var(--p)' }}>

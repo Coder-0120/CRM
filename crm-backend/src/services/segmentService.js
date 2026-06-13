@@ -3,19 +3,20 @@ const Customer = require('../models/Customer');
 function buildMongoQuery(rules, logicOperator) {
   const conditions = rules.map(rule => {
     const { field, operator, value } = rule;
+    const numValue = Number(value);
 
-    if (operator === 'gt')  return { [field]: { $gt: Number(value) } };
-    if (operator === 'lt')  return { [field]: { $lt: Number(value) } };
-    if (operator === 'gte') return { [field]: { $gte: Number(value) } };
-    if (operator === 'lte') return { [field]: { $lte: Number(value) } };
-    if (operator === 'eq')  return { [field]: value };
+    if (operator === 'gt')  return { [field]: { $gt: numValue } };
+    if (operator === 'lt')  return { [field]: { $lt: numValue } };
+    if (operator === 'gte') return { [field]: { $gte: numValue } };
+    if (operator === 'lte') return { [field]: { $lte: numValue } };
+    if (operator === 'eq')  return { [field]: isNaN(numValue) ? value : numValue };
     if (operator === 'contains') return { [field]: { $regex: value, $options: 'i' } };
     if (operator === 'in')  return { [field]: { $in: Array.isArray(value) ? value : [value] } };
     if (operator === 'in_last_days') {
-      return { [field]: { $gte: new Date(Date.now() - value * 86400000) } };
+      return { [field]: { $gte: new Date(Date.now() - Number(value) * 86400000) } };
     }
     if (operator === 'not_in_last_days') {
-      return { [field]: { $lt: new Date(Date.now() - value * 86400000) } };
+      return { [field]: { $lt: new Date(Date.now() - Number(value) * 86400000) } };
     }
     return {};
   });
