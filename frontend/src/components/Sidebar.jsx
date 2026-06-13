@@ -62,9 +62,13 @@ export default function Sidebar({ open, onClose, onOpen }) {
       <motion.aside className={`sb ${open ? 'open' : ''}`} initial={false}>
 
         {/* Logo row */}
-        <div className="sb-logo">
+        <div className="sb-logo"  onClick={() => {
+      nav('/');
+      onClose?.();
+    }}>
           <div className="sb-logo-ic">✦</div>
-          <div className="sb-logo-txt">
+          <div className="sb-logo-txt" >
+
             <h1>Xeno<em>CRM</em></h1>
             <p>AI Campaign Platform</p>
           </div>
