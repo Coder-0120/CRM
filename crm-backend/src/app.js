@@ -11,28 +11,24 @@ const app = express();
 const allowedOrigins = [
   'https://crm-mu-lilac.vercel.app',
   'http://localhost:3000',
-  // Add any other frontend URLs here (e.g. preview deployments)
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, curl)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    }
+    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true,
-  maxAge: 86400, // cache preflight for 24h
+  maxAge: 86400,
 }));
 
-// Handle OPTIONS preflight explicitly (belt-and-suspenders for Express 5)
-app.options('*', cors());
+// Handle OPTIONS preflight — use '/{*path}' for Express 5 compatibility
+app.options('/{*path}', cors());
 
-// ── Helmet AFTER cors so it doesn't strip CORS headers ──
+// ── Helmet AFTER cors ──
 app.use(helmet({
   crossOriginResourcePolicy: false,
   crossOriginOpenerPolicy:   false,
