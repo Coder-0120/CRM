@@ -3,25 +3,41 @@ const express  = require('express');
 const mongoose = require('mongoose');
 const helmet   = require('helmet');
 const morgan   = require('morgan');
+const cors     = require('cors');
 
 const app = express();
 
-// ── CORS — manual middleware, works on ALL browsers including mobile Safari ──
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
-  res.header('Access-Control-Max-Age', '86400'); // cache preflight 24h
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);   // respond to preflight immediately
-  }
-  next();
-});
+// ── CORS — must be FIRST, before helmet and all routes ──
+const allowedOrigins = [
+  'https://crm-mu-lilac.vercel.app',
+  'http://localhost:3000',
+  // Add any other frontend URLs here (e.g. preview deployments)
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true,
+  maxAge: 86400, // cache preflight for 24h
+}));
+
+// Handle OPTIONS preflight explicitly (belt-and-suspenders for Express 5)
+app.options('*', cors());
+
+// ── Helmet AFTER cors so it doesn't strip CORS headers ──
 app.use(helmet({
   crossOriginResourcePolicy: false,
   crossOriginOpenerPolicy:   false,
 }));
+
 app.use(express.json());
 app.use((req, res, next) => { res.setTimeout(120000); next(); });
 app.use(morgan('dev'));
