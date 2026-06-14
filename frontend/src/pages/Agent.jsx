@@ -130,7 +130,7 @@ export default function Agent() {
   };
 
   return (
-    <div className="agent-page" style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="agent-page" style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <motion.div className="page-header" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <div className="page-header-left">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -141,7 +141,7 @@ export default function Agent() {
         </div>
       </motion.div>
 
-      <div className="agent-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20, flex: 1, minHeight: 0 }}>
+      <div className="agent-grid" style={{ display: 'grid', gap: 20, flex: 1, minHeight: 0 }}>
         <motion.div className="card" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.1 }} style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--bd)' }}>
             <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #1e40af, #3b82f6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 16 }}>X</div>

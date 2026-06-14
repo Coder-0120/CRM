@@ -1103,7 +1103,28 @@ tr:hover td{background:rgba(108,99,255,.03)}
 .sugg-btn:last-child{margin-bottom:0}
 .sugg-btn:hover{background:var(--p3);border-color:var(--p);color:var(--p)}
 .sugg-btn span{font-size:14px;flex-shrink:0}
+.agent-grid{
+  grid-template-columns: 1fr 280px;
+}
 
+@media (max-width: 768px){
+
+  .agent-page{
+    padding:16px !important;
+  }
+
+  .agent-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .page-header h2{
+    font-size:1.4rem;
+  }
+
+  .page-header p{
+    font-size:0.9rem;
+  }
+}
 /* ════════════════════════════════════════════
    RESPONSIVE
    ════════════════════════════════════════════ */
