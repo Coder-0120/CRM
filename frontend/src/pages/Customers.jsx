@@ -56,11 +56,14 @@ useEffect(() => {
   }
 };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['customers', search, page],
-    queryFn: () => api.get('/customers', { params: { search, page, limit: 20 } }).then(r => r.data),
-    keepPreviousData: true
-  });
+  const { data } = useQuery({
+  queryKey: ['customers', search, page],
+  queryFn: () =>
+    api.get('/customers', {
+      params: { search, page, limit: 20 }
+    }).then(r => r.data),
+  keepPreviousData: true
+});
 
   const getActivityColor = (days) => {
     if (days > 90) return { badge: 'danger', label: 'At Risk', icon: AlertCircle };
