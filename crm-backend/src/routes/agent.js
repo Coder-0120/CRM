@@ -145,7 +145,7 @@ async function executeTool(name, args, userId) {
       const savedLogs = await CommunicationLog.insertMany(logs);
 
       const CHANNEL_URL  = process.env.CHANNEL_SERVICE_URL;
-      const CALLBACK_URL = process.env.CALLBACK_URL || 'http://localhost:5000/api/webhook/delivery';
+      const CALLBACK_URL = process.env.CALLBACK_URL || 'https://xeno-crm-backend-lo8a.onrender.com/api/webhook/delivery';
       savedLogs.forEach(log => {
         axios.post(`${CHANNEL_URL}/send`, {
           logId: log._id, campaignId: campaign._id,
