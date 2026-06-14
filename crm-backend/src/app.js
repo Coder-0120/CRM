@@ -1,27 +1,22 @@
 require('dotenv').config();
 const express  = require('express');
 const mongoose = require('mongoose');
-const cors     = require('cors');
 const helmet   = require('helmet');
 const morgan   = require('morgan');
 
 const app = express();
 
-// ── CORS — must come BEFORE helmet and all routes ──
-app.use(cors({
-  origin: true,          // reflect the request origin — allows any origin
-  credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS','PATCH'],
-  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
-}));
-
-// Handle OPTIONS preflight for every route
-app.options(/(.*)/, cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS','PATCH'],
-  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
-}));
+// ── CORS — manual middleware, works on ALL browsers including mobile Safari ──
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
+  res.header('Access-Control-Max-Age', '86400'); // cache preflight 24h
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);   // respond to preflight immediately
+  }
+  next();
+});
 
 app.use(helmet({
   crossOriginResourcePolicy: false,
@@ -36,7 +31,7 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB error:', err));
 
-// ── Health / root ──
+// ── Health ──
 app.get('/',       (req, res) => res.json({ status: 'ok', service: 'xeno-crm-backend', time: new Date() }));
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 
