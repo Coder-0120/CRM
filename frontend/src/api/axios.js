@@ -1,19 +1,20 @@
 import axios from 'axios';
 
+// REACT_APP_API_URL = "https://xeno-crm-backend-lo8a.onrender.com/api"
+// Use it directly as baseURL — routes just add /customers, /orders etc.
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
-// Attach JWT token to every request automatically
+// Attach JWT token to every request
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('xeno_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// If any response is 401, clear the stale token
-// (this forces re-login if token expired mid-session)
+// 401 = token expired, force re-login
 api.interceptors.response.use(
   res => res,
   err => {
