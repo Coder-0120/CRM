@@ -2,10 +2,23 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const Ctx = createContext();
 
-// REACT_APP_API_URL = "https://xeno-crm-backend-lo8a.onrender.com/api"
-// Use it directly — no stripping needed
 const API = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api')
-  .replace(/\/$/, ''); // only remove trailing slash if any
+  .replace(/\/$/, '');
+
+// fetch with timeout — mobile needs longer (Render free tier cold start = 30s)
+async function fetchWithTimeout(url, options = {}, timeoutMs = 45000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    return res;
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('Request timed out. The server may be waking up — please try again.');
+    throw e;
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
@@ -15,7 +28,7 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('xeno_token');
     if (!token) { setLoading(false); return; }
 
-    fetch(`${API}/auth/me`, {
+    fetchWithTimeout(`${API}/auth/me`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(r => r.ok ? r.json() : Promise.reject())
@@ -31,7 +44,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const res  = await fetch(`${API}/auth/login`, {
+      const res  = await fetchWithTimeout(`${API}/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email, password })
@@ -41,14 +54,13 @@ export function AuthProvider({ children }) {
       _persist(data.token, data.user);
       return { ok: true };
     } catch (e) {
-      console.error('Login error:', e);
-      return { ok: false, err: 'Cannot reach server. Is the backend running?' };
+      return { ok: false, err: e.message || 'Cannot reach server. Please try again.' };
     }
   };
 
   const signup = async (name, email, password) => {
     try {
-      const res  = await fetch(`${API}/auth/signup`, {
+      const res  = await fetchWithTimeout(`${API}/auth/signup`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ name, email, password })
@@ -58,8 +70,7 @@ export function AuthProvider({ children }) {
       _persist(data.token, data.user);
       return { ok: true };
     } catch (e) {
-      console.error('Signup error:', e);
-      return { ok: false, err: 'Cannot reach server. Is the backend running?' };
+      return { ok: false, err: e.message || 'Cannot reach server. Please try again.' };
     }
   };
 
