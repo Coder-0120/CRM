@@ -1,32 +1,22 @@
 require('dotenv').config();
 const express  = require('express');
 const mongoose = require('mongoose');
-const helmet   = require('helmet');
 const morgan   = require('morgan');
 
 const app = express();
 
-// ── CORS — BEFORE helmet, otherwise helmet strips these headers ──
+// ── CORS — raw headers, NO helmet at all ──
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Vary', 'Origin');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
   if (req.method === 'OPTIONS') {
-    return res.status(204).end();   // .end() instead of sendStatus() for Express 5
+    res.writeHead(204);
+    res.end();
+    return;
   }
   next();
 });
-
-// ── Helmet AFTER cors, with all cross-origin policies disabled ──
-app.use(helmet({
-  crossOriginResourcePolicy:     { policy: 'cross-origin' },
-  crossOriginOpenerPolicy:       false,
-  crossOriginEmbedderPolicy:     false,
-  contentSecurityPolicy:         false,
-}));
 
 app.use(express.json());
 app.use((req, res, next) => { res.setTimeout(120000); next(); });
