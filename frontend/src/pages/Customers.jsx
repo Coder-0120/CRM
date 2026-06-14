@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery,useQueryClient  } from '@tanstack/react-query';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
-import { Search, Users, TrendingUp, AlertCircle } from 'lucide-react';
+import { Search, Users, TrendingUp, AlertCircle,Trash2 } from 'lucide-react';
 
 function daysSince(date) {
   return Math.floor((Date.now() - new Date(date)) / 86400000);
@@ -22,8 +22,28 @@ const rowVariants = {
 };
 
 export default function Customers() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const handleDelete = async (id, name) => {
+  const confirmDelete = window.confirm(
+    `Are you sure you want to delete ${name}?`
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await api.delete(`/customers/${id}`);
+
+    queryClient.invalidateQueries({
+      queryKey: ['customers']
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert('Failed to delete customer');
+  }
+};
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', search, page],
@@ -116,7 +136,7 @@ export default function Customers() {
                         <th>Total Spend</th>
                         <th>Visits</th>
                         <th>Activity</th>
-                        <th>Tags</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -145,19 +165,24 @@ export default function Customers() {
                               </div>
                             </td>
                             <td>
-                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                {(c.tags || []).slice(0, 2).map(t => (
-                                  <span key={t} className="badge" style={{ background: 'rgba(30,64,175,.15)', color: '#1e40af' }}>
-                                    {t}
-                                  </span>
-                                ))}
-                                {(c.tags || []).length > 2 && (
-                                  <span className="badge" style={{ background: 'var(--bg2)', color: 'var(--t2)' }}>
-                                    +{(c.tags || []).length - 2}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+  <motion.button
+    onClick={() => handleDelete(c._id, c.name)}
+    whileHover={{ scale: 1.15 }}
+    whileTap={{ scale: 0.9 }}
+    style={{
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer',
+      color: '#ef4444',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+  >
+    <Trash2 size={18} />
+  </motion.button>
+</td>
+                           
                           </motion.tr>
                         );
                       })}
