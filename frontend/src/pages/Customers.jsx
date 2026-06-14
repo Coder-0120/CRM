@@ -27,7 +27,7 @@ export default function Customers() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', search, page],
-    queryFn: () => api.get('/api/customers', { params: { search, page, limit: 20 } }).then(r => r.data),
+    queryFn: () => api.get('/customers', { params: { search, page, limit: 20 } }).then(r => r.data),
     keepPreviousData: true
   });
 

@@ -97,7 +97,7 @@ const cardVariants = {
 export default function Campaigns() {
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ['campaigns'],
-    queryFn: () => api.get('/api/campaigns').then(r => r.data),
+    queryFn: () => api.get('/campaigns').then(r => r.data),
     refetchInterval: 3000
   });
 

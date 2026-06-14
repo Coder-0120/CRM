@@ -34,27 +34,27 @@ export default function Dashboard() {
 
   const { data: custStats } = useQuery({
     queryKey: ['custStats'],
-    queryFn: () => api.get('/api/customers/stats').then(r => r.data),
+    queryFn: () => api.get('/customers/stats').then(r => r.data),
     refetchInterval: 10000
   });
 
   // eslint-disable-next-line no-unused-vars
   const { data: orderStats } = useQuery({
     queryKey: ['orderStats'],
-    queryFn: () => api.get('/api/orders/stats').then(r => r.data),
+    queryFn: () => api.get('/orders/stats').then(r => r.data),
     refetchInterval: 10000
   });
 
   // eslint-disable-next-line no-unused-vars
   const { data: overview } = useQuery({
     queryKey: ['overview'],
-    queryFn: () => api.get('/api/analytics/overview').then(r => r.data),
+    queryFn: () => api.get('/analytics/overview').then(r => r.data),
     refetchInterval: 5000
   });
 
   const { data: campaignData } = useQuery({
     queryKey: ['campaignAnalytics'],
-    queryFn: () => api.get('/api/analytics/campaigns').then(r => r.data),
+    queryFn: () => api.get('/analytics/campaigns').then(r => r.data),
     refetchInterval: 5000
   });
 

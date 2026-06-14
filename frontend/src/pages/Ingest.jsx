@@ -56,7 +56,7 @@ export default function Ingest() {
           city: r.city, totalSpend: Number(r.totalSpend) || 0,
           visitCount: Number(r.visitCount) || 0
         }));
-        await api.post('/api/customers/bulk', { customers });
+        await api.post('/customers/bulk', { customers });
         toast.success(`✅ Imported ${customers.length} customers!`);
       } else {
         const orders = csvData.map(r => ({
@@ -64,7 +64,7 @@ export default function Ingest() {
           amount: Number(r.amount) || 0,
           status: r.status || 'completed'
         }));
-        await api.post('/api/orders/bulk', { orders });
+        await api.post('/orders/bulk', { orders });
         toast.success(`✅ Imported ${orders.length} orders!`);
       }
       setCsvData([]); 
@@ -79,7 +79,7 @@ export default function Ingest() {
   const addCustomer = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/customers/bulk', { customers: [{ ...customer, totalSpend: Number(customer.totalSpend), visitCount: Number(customer.visitCount) }] });
+      await api.post('/customers/bulk', { customers: [{ ...customer, totalSpend: Number(customer.totalSpend), visitCount: Number(customer.visitCount) }] });
       toast.success('✅ Customer added!');
       setCustomer({ name:'', email:'', phone:'', city:'', totalSpend:'', visitCount:'' });
     } catch (e) { 
@@ -90,7 +90,7 @@ export default function Ingest() {
   const addOrder = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/orders/bulk', { orders: [{ ...order, amount: Number(order.amount) }] });
+      await api.post('/orders/bulk', { orders: [{ ...order, amount: Number(order.amount) }] });
       toast.success('✅ Order added!');
       setOrder({ customerEmail:'', amount:'', status:'completed' });
     } catch (e) { 
