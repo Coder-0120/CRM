@@ -1,25 +1,29 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
 
 const Ctx = createContext();
 
-const BASE = process.env.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL.replace('/api', '')
-  : 'http://localhost:5000';
+// REACT_APP_API_URL is "https://xeno-crm-backend-lo8a.onrender.com/api"
+// We need base without /api for auth routes
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const BASE = API_URL.endsWith('/api')
+  ? API_URL.slice(0, -4)   // remove last 4 chars "/api"
+  : API_URL;
+
+console.log('[Auth] BASE URL:', BASE); // remove after confirming it works
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
-  const [loading, setLoading] = useState(true); // true while verifying stored token
+  const [loading, setLoading] = useState(true);
 
-  // On mount: restore session from stored token
   useEffect(() => {
     const token = localStorage.getItem('xeno_token');
     if (!token) { setLoading(false); return; }
 
-    axios.get(`${BASE}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` }
+    fetch(`${BASE}/api/auth/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(r => setUser(r.data))
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(u => setUser(u))
       .catch(() => localStorage.removeItem('xeno_token'))
       .finally(() => setLoading(false));
   }, []);
@@ -29,25 +33,35 @@ export function AuthProvider({ children }) {
     setUser(userData);
   };
 
-  // login(email, password) → { ok, err? }
   const login = async (email, password) => {
     try {
-      const { data } = await axios.post(`${BASE}/api/auth/login`, { email, password });
+      const res  = await fetch(`${BASE}/api/auth/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) return { ok: false, err: data.error || 'Login failed.' };
       _persist(data.token, data.user);
       return { ok: true };
-    } catch (e) {
-      return { ok: false, err: e.response?.data?.error || 'Login failed. Check your credentials.' };
+    } catch {
+      return { ok: false, err: 'Cannot reach server. Is the backend running?' };
     }
   };
 
-  // signup(name, email, password) → { ok, err? }
   const signup = async (name, email, password) => {
     try {
-      const { data } = await axios.post(`${BASE}/api/auth/signup`, { name, email, password });
+      const res  = await fetch(`${BASE}/api/auth/signup`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) return { ok: false, err: data.error || 'Signup failed.' };
       _persist(data.token, data.user);
       return { ok: true };
-    } catch (e) {
-      return { ok: false, err: e.response?.data?.error || 'Signup failed. Please try again.' };
+    } catch {
+      return { ok: false, err: 'Cannot reach server. Is the backend running?' };
     }
   };
 
