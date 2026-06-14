@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useQuery,useQueryClient  } from '@tanstack/react-query';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
@@ -8,13 +8,13 @@ function daysSince(date) {
   return Math.floor((Date.now() - new Date(date)) / 86400000);
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
-};
+// const containerVariants = {
+//   hidden: { opacity: 0 },
+//   visible: {
+//     opacity: 1,
+//     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+//   },
+// };
 
 const rowVariants = {
   hidden: { opacity: 0, x: -20 },
@@ -25,6 +25,17 @@ export default function Customers() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  window.addEventListener('resize', handleResize);
+
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
   const handleDelete = async (id, name) => {
   const confirmDelete = window.confirm(
     `Are you sure you want to delete ${name}?`
@@ -103,31 +114,45 @@ export default function Customers() {
           </div>
         </div>
 
-        {isLoading ? (
-          <motion.div 
-            style={{ textAlign: 'center', padding: '40px 24px' }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <div style={{ fontSize: 40, marginBottom: 12 }}>⟳</div>
-            <p style={{ color: 'var(--t2)' }}>Loading customers...</p>
-          </motion.div>
-        ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {(data?.customers || []).length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>👥</div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>No customers found</h3>
-                <p style={{ color: 'var(--t2)' }}>Add your first customer through Data Ingestion</p>
-              </div>
-            ) : (
-              <>
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="table">
+        {isMobile ? (
+  <div className="customer-cards">
+    {(data?.customers || []).map((c) => {
+      const activity = getActivityColor(daysSince(c.lastActiveDate));
+
+      return (
+        <motion.div
+          key={c._id}
+          className="customer-mobile-card"
+          variants={rowVariants}
+        >
+          <div className="customer-card-header">
+            <h3>{c.name}</h3>
+
+            <button
+              onClick={() => handleDelete(c._id, c.name)}
+              className="delete-btn"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+
+          <p><strong>Email:</strong> {c.email}</p>
+          <p><strong>City:</strong> {c.city || '—'}</p>
+          <p><strong>Total Spend:</strong> ₹{c.totalSpend.toLocaleString()}</p>
+          <p><strong>Visits:</strong> {c.visitCount}</p>
+
+          <div style={{ marginTop: 10 }}>
+            <span className={`badge ${activity.badge}`}>
+              {daysSince(c.lastActiveDate)}d
+            </span>
+          </div>
+        </motion.div>
+      );
+    })}
+  </div>
+) : (
+  <div className="customer-table-wrapper">
+     <table className="table">
                     <thead>
                       <tr>
                         <th>Name</th>
@@ -188,43 +213,10 @@ export default function Customers() {
                       })}
                     </tbody>
                   </table>
-                </div>
+  </div>
+)}
 
-                <motion.div
-                  className="pager"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--bd)' }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <p style={{ fontSize: 13, color: 'var(--t2)' }}>
-                    Page <strong style={{ color: 'var(--t1)' }}>{page}</strong> of <strong style={{ color: 'var(--t1)' }}>{Math.ceil((data?.total || 0) / 20)}</strong>
-                  </p>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <motion.button 
-                      className="btn btn-secondary"
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      ← Previous
-                    </motion.button>
-                    <motion.button 
-                      className="btn btn-secondary"
-                      onClick={() => setPage(p => p + 1)}
-                      disabled={(data?.customers || []).length < 20}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Next →
-                    </motion.button>
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </motion.div>
-        )}
+       
       </motion.div>
     </div>
   );
