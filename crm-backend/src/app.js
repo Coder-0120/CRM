@@ -6,22 +6,28 @@ const morgan   = require('morgan');
 
 const app = express();
 
-// ── CORS — manual middleware, works on ALL browsers including mobile Safari ──
+// ── CORS — BEFORE helmet, otherwise helmet strips these headers ──
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Vary', 'Origin');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
-  res.header('Access-Control-Max-Age', '86400'); // cache preflight 24h
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);   // respond to preflight immediately
+    return res.status(204).end();   // .end() instead of sendStatus() for Express 5
   }
   next();
 });
 
+// ── Helmet AFTER cors, with all cross-origin policies disabled ──
 app.use(helmet({
-  crossOriginResourcePolicy: false,
-  crossOriginOpenerPolicy:   false,
+  crossOriginResourcePolicy:     { policy: 'cross-origin' },
+  crossOriginOpenerPolicy:       false,
+  crossOriginEmbedderPolicy:     false,
+  contentSecurityPolicy:         false,
 }));
+
 app.use(express.json());
 app.use((req, res, next) => { res.setTimeout(120000); next(); });
 app.use(morgan('dev'));
