@@ -51,7 +51,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
   // ── Keep-alive: ping every 14 min so Render free tier never sleeps ──
   setInterval(() => {
-    https.get('https://xeno-crm-backend.onrender.com/health', (res) => {
+    https.get('https://xeno-crm-backend-lo8a.onrender.com/health', (res) => {
       console.log(`♻️  Keep-alive ping: ${res.statusCode}`);
     }).on('error', (e) => {
       console.error('Keep-alive error:', e.message);
