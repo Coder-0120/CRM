@@ -24,14 +24,19 @@ Your capabilities:
 - Write compelling, personalized campaign messages
 - Launch campaigns and track their performance
 
-When a marketer describes what they want:
-1. First preview the segment to know the audience size
-2. Create the segment with well-defined rules — the response will include a "segmentId" field (a MongoDB ObjectId hex string)
-3. Craft a personalized message (use {{name}} and {{city}} for personalization)
-4. Call create_campaign using the EXACT "segmentId" value returned by create_segment — NEVER use the segment name, never invent an id
-5. Send the campaign and confirm with key metrics
+When a marketer describes what they want, follow these steps IN ORDER, ONE CALL AT A TIME:
+1. Call preview_segment ONCE to check audience size
+2. Call create_segment ONCE — you will receive a "segmentId" (a 24-character hex string like "6847a1c2e3f...")
+3. Call create_campaign ONCE using that exact segmentId
+4. Call send_campaign ONCE with the campaignId returned from create_campaign
+5. Confirm with key metrics
 
-CRITICAL RULE: The segmentId argument for create_campaign MUST be the exact "segmentId" string returned by the create_segment tool call result. It looks like "6847a1c2e3f..." (a 24-character hex string). Never pass a human-readable name like "HighSpenderPune" as the segmentId.
+ABSOLUTE RULES — violating these will break the system:
+- NEVER call create_segment more than ONCE per user request. One query = one segment, regardless of how many customers match.
+- NEVER call create_campaign more than ONCE per user request. One query = one campaign.
+- Do NOT loop over individual customers. Segments target groups, not individuals.
+- The segmentId for create_campaign MUST be the exact "segmentId" hex string returned by create_segment. Never use a name or invented id.
+- If the audience has 2 customers or 2000, still create just ONE segment and ONE campaign.
 
 Be proactive and specific about numbers. Keep messages short and action-oriented.`;
 
@@ -188,7 +193,11 @@ async function runGemini(messages, userId) {
   const toolsUsed = [];
   let loopCount = 0;
 
-  while (loopCount < 6) {
+  // Deduplication guards — one segment and one campaign per user turn max
+  const callCount = { create_segment: 0, create_campaign: 0, send_campaign: 0 };
+  const realIds   = { segmentId: null, campaignId: null };
+
+  while (loopCount < 8) {
     loopCount++;
     const parts = response.response.candidates?.[0]?.content?.parts || [];
     const functionCalls = parts.filter(p => p.functionCall);
@@ -197,9 +206,31 @@ async function runGemini(messages, userId) {
     const toolResults = [];
     for (const part of functionCalls) {
       const { name, args } = part.functionCall;
+
+      // Block duplicate segment/campaign creation
+      if (callCount[name] !== undefined && callCount[name] >= 1) {
+        console.warn(`[Gemini] Blocked duplicate call to ${name}`);
+        toolResults.push({ functionResponse: { name, response: { error: `${name} already called once this turn. Do not call it again. Proceed with the existing result.` } } });
+        continue;
+      }
+
+      // Fix id references if AI passes wrong value
+      if (name === 'create_campaign' && realIds.segmentId && !/^[a-f\d]{24}$/i.test(args.segmentId)) {
+        args.segmentId = realIds.segmentId;
+      }
+      if (name === 'send_campaign' && realIds.campaignId && !/^[a-f\d]{24}$/i.test(args.campaignId)) {
+        args.campaignId = realIds.campaignId;
+      }
+      if (name === 'get_campaign_stats' && realIds.campaignId && !/^[a-f\d]{24}$/i.test(args.campaignId)) {
+        args.campaignId = realIds.campaignId;
+      }
+
       console.log(`[Gemini] Tool: ${name}`, args);
       toolsUsed.push(name);
+      if (callCount[name] !== undefined) callCount[name]++;
       const result = await executeTool(name, args, userId);
+      if (result.segmentId)  realIds.segmentId  = result.segmentId;
+      if (result.campaignId) realIds.campaignId = result.campaignId;
       toolResults.push({ functionResponse: { name, response: result } });
     }
     response = await chat.sendMessage(toolResults);
@@ -222,6 +253,8 @@ async function runGroq(messages, userId) {
   ];
   const toolsUsed = [];
   const realIds   = { segmentId: null, campaignId: null };
+  // Deduplication guards — one segment and one campaign per user turn max
+  const callCount = { create_segment: 0, create_campaign: 0, send_campaign: 0 };
   let loopCount   = 0;
 
   while (loopCount < 10) {
@@ -255,6 +288,13 @@ async function runGroq(messages, userId) {
       try { args = JSON.parse(call.function.arguments || '{}'); }
       catch { groqMessages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify({ error: 'Invalid arguments JSON' }) }); continue; }
 
+      // Block duplicate segment/campaign creation
+      if (callCount[name] !== undefined && callCount[name] >= 1) {
+        console.warn(`[Groq] Blocked duplicate call to ${name}`);
+        groqMessages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify({ error: `${name} already called once this turn. Do not call it again. Proceed with the existing result.` }) });
+        continue;
+      }
+
       if (name === 'create_campaign' && realIds.segmentId && !/^[a-f\d]{24}$/i.test(args.segmentId)) {
         args.segmentId = realIds.segmentId;
       }
@@ -267,6 +307,7 @@ async function runGroq(messages, userId) {
 
       console.log(`[Groq] Tool: ${name}`, args);
       toolsUsed.push(name);
+      if (callCount[name] !== undefined) callCount[name]++;
       const result = await executeTool(name, args, userId);
       if (result.segmentId)  realIds.segmentId  = result.segmentId;
       if (result.campaignId) realIds.campaignId = result.campaignId;
