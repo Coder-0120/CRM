@@ -10,8 +10,11 @@ const auth     = require('../middleware/auth');
 const { previewSegment, getAudienceForSegment } = require('../services/segmentService');
 const axios    = require('axios');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const groq  = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const geminiKey = process.env.GEMINI_API_KEY?.trim();
+const groqKey = process.env.GROQ_API_KEY?.trim();
+const groqFallbackEnabled = process.env.GROQ_FALLBACK_ENABLED === 'true';
+const genAI = geminiKey ? new GoogleGenerativeAI(geminiKey) : null;
+const groq  = groqKey ? new Groq({ apiKey: groqKey }) : null;
 
 router.use(auth);
 
@@ -182,6 +185,7 @@ async function executeTool(name, args, userId) {
 
 // ── Gemini handler ────────────────────────────────────────────────────────────
 async function runGemini(messages, userId) {
+  if (!genAI) throw new Error('Gemini API key is not configured');
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: SYSTEM_PROMPT, tools: geminiTools });
   const history = messages.slice(0, -1).map(m => ({
     role: m.role === 'ai' ? 'model' : 'user',
@@ -244,6 +248,7 @@ async function runGemini(messages, userId) {
 
 // ── Groq handler ──────────────────────────────────────────────────────────────
 async function runGroq(messages, userId) {
+  if (!groq) throw new Error('Groq API key is not configured');
   const groqMessages = [
     { role: 'system', content: SYSTEM_PROMPT },
     ...messages.map(m => ({
@@ -262,7 +267,7 @@ async function runGroq(messages, userId) {
     let completion;
     try {
       completion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile', messages: groqMessages,
+        model: 'openai/gpt-oss-120b', messages: groqMessages,
         tools: groqTools, tool_choice: 'auto', max_tokens: 1024
       });
     } catch (groqErr) {
@@ -270,7 +275,7 @@ async function runGroq(messages, userId) {
         console.warn('[Groq] Malformed tool call, retrying without tools...');
         const lastAssistant = [...groqMessages].reverse().find(m => m.role === 'assistant');
         if (lastAssistant) groqMessages.splice(groqMessages.lastIndexOf(lastAssistant), 1);
-        const fallback = await groq.chat.completions.create({ model: 'llama-3.3-70b-versatile', messages: groqMessages, max_tokens: 512 });
+        const fallback = await groq.chat.completions.create({ model: 'openai/gpt-oss-120b', messages: groqMessages, max_tokens: 512 });
         return { reply: fallback.choices[0].message.content || `✅ Done! Completed: ${toolsUsed.join(', ')}.`, toolsUsed };
       }
       throw groqErr;
@@ -329,9 +334,27 @@ router.post('/chat', async (req, res) => {
     try {
       result = await runGemini(messages, req.userId);
     } catch (geminiErr) {
+      if (!groqFallbackEnabled) {
+        console.error('[Agent] Gemini failed and Groq fallback is disabled:', geminiErr.message);
+        return res.status(503).json({
+          error: 'Gemini is unavailable. Configure a valid GEMINI_API_KEY or explicitly enable a valid Groq fallback.'
+        });
+      }
       console.warn('[Agent] Gemini failed, falling back to Groq:', geminiErr.message);
       provider = 'groq';
-      result = await runGroq(messages, req.userId);
+      try {
+        result = await runGroq(messages, req.userId);
+      } catch (groqErr) {
+        const status = groqErr?.status || groqErr?.statusCode;
+        const code = groqErr?.error?.error?.code || groqErr?.code;
+        const isAuthFailure = status === 401 || code === 'invalid_api_key' || code === 'expired_api_key';
+        if (isAuthFailure) {
+          return res.status(503).json({
+            error: 'AI provider authentication failed. Replace the expired GEMINI_API_KEY or GROQ_API_KEY in the backend environment and restart the server.'
+          });
+        }
+        throw groqErr;
+      }
     }
 
     res.json({ reply: result.reply, toolsUsed: result.toolsUsed, role: 'assistant', provider });
