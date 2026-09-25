@@ -186,7 +186,7 @@ async function executeTool(name, args, userId) {
 // ── Gemini handler ────────────────────────────────────────────────────────────
 async function runGemini(messages, userId) {
   if (!genAI) throw new Error('Gemini API key is not configured');
-  const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction: SYSTEM_PROMPT, tools: geminiTools });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview', systemInstruction: SYSTEM_PROMPT, tools: geminiTools });
   const history = messages.slice(0, -1).map(m => ({
     role: m.role === 'ai' ? 'model' : 'user',
     parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
