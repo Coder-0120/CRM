@@ -235,8 +235,14 @@ async function runGemini(messages, userId) {
       const result = await executeTool(name, args, userId);
       if (result.segmentId)  realIds.segmentId  = result.segmentId;
       if (result.campaignId) realIds.campaignId = result.campaignId;
-      toolResults.push({ functionResponse: { name, response: result } });
+toolResults.push({
+  functionResponse: {
+    name,
+    response: {
+      result: result
     }
+  }
+});    }
     response = await chat.sendMessage(toolResults);
   }
 
