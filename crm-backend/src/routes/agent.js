@@ -154,49 +154,13 @@ async function executeTool(name, args, userId) {
 
       const CHANNEL_URL  = process.env.CHANNEL_SERVICE_URL;
       const CALLBACK_URL = process.env.CALLBACK_URL || 'https://xeno-crm-backend-lo8a.onrender.com/api/webhook/delivery';
-      let failedCount = 0;
-
-for (const log of savedLogs) {
-  try {
-    await axios.post(`${CHANNEL_URL}/send`, {
-      logId: log._id,
-      campaignId: campaign._id,
-      recipient: log.customerEmail,
-      message: log.message,
-      channel: campaign.channel,
-      callbackUrl: CALLBACK_URL
-    });
-
-    console.log(`[Channel] Accepted: ${log.customerEmail}`);
-
-    // Prevent 429
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-  } catch (err) {
-    failedCount++;
-
-    console.error(
-      `[Channel] Failed: ${log.customerEmail}`,
-      err.response?.status || err.message
-    );
-
-    // Mark this communication as failed
-    log.status = 'failed';
-    log.statusHistory.push({
-      status: 'failed',
-      timestamp: new Date()
-    });
-
-    await log.save();
-  }
-}
-
-// If every message failed, don't leave campaign stuck on "sending"
-if (failedCount === savedLogs.length && savedLogs.length > 0) {
-  campaign.status = 'completed';
-  campaign.stats.failed = failedCount;
-  await campaign.save();
-}
+      savedLogs.forEach(log => {
+        axios.post(`${CHANNEL_URL}/send`, {
+          logId: log._id, campaignId: campaign._id,
+          recipient: log.customerEmail, message: log.message,
+          channel: campaign.channel, callbackUrl: CALLBACK_URL
+        }).catch(err => console.error('Channel service error:', err.message));
+      });
 
       return { success: true, totalRecipients: customers.length, campaignId: campaign._id.toString() };
     }
